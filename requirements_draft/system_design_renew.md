@@ -13,7 +13,7 @@
 ### Tech Stack
 
 | Layer | Technology | Status |
-|-------|------------|--------|
+| ----- | ---------- | ------ |
 | **Frontend** | Django Templates + crispy-bootstrap5 | ✅ Active |
 | **Frontend (Planned)** | React + Vite + TypeScript + Tailwind CSS + shadcn/ui | ⬜ Planned |
 | **Backend** | Django 6.0.2 + Django Templates | ✅ Active |
@@ -29,7 +29,7 @@
 
 ### Infrastructure Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                  CURRENT DEVELOPMENT SETUP                       │
 ├─────────────────────────────────────────────────────────────────┤
@@ -122,7 +122,7 @@ flowchart TB
 #### 3.1.1 Procurement (Pengadaan via eKatalog)
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | No. Dokumen Pengadaan | String | From eKatalog |
 | Tanggal Penerimaan | Date | |
 | Supplier/Vendor | Reference | ForeignKey to Supplier |
@@ -135,7 +135,7 @@ flowchart TB
 #### 3.1.2 Grants (Hibah)
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | No. Surat Hibah | String | |
 | Asal Hibah | Enum | Province, Ministry, Donation |
 | Tanggal Penerimaan | Date | |
@@ -153,19 +153,19 @@ flowchart TB
 #### Item Master (Master Barang)
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | Kode Barang | String | Auto-generated or manual |
 | Nama Barang | String | |
 | Satuan | ForeignKey(Unit) | Reference to Unit table |
 | Kategori | ForeignKey(Category) | Reference to Category table |
 | Is Program Item | Boolean | [P] marker |
-| Program Name | Optional | TB, HIV, Kusta, etc. |
+| Program | ForeignKey(Program) | Reference to Program table (TB, HIV, etc.) |
 | Minimum Stock | Number | For alerts |
 
 #### Unit (Satuan) - Lookup Table
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | Code | String | TAB, KAP, SYR, BTL, AMP, VIA, etc. |
 | Name | String | Tablet, Kapsul, Sirup, Botol, etc. |
 | Description | Optional | Additional info |
@@ -173,7 +173,7 @@ flowchart TB
 #### Category (Kategori) - Lookup Table
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | Code | String | TABLET, KAPSUL, INJEKSI, VAKSIN, etc. |
 | Name | String | Display name |
 | Sort Order | Integer | For display ordering |
@@ -181,7 +181,7 @@ flowchart TB
 #### Stock (Persediaan)
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | Item | Reference | ForeignKey to Item |
 | Location | Reference | ForeignKey to Location |
 | Batch/Lot | String | |
@@ -199,7 +199,7 @@ flowchart TB
 #### 3.3.1 Request (Permintaan via LPLPO)
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | No. LPLPO | String | From Puskesmas |
 | Puskesmas | Reference | Requesting facility |
 | Tanggal Permintaan | Date | |
@@ -212,7 +212,7 @@ flowchart TB
 #### 3.3.2 Allocation (Alokasi)
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | No. Alokasi | String | |
 | Periode | String | Month/Quarter |
 | Type | Enum | Routine, Special |
@@ -224,7 +224,7 @@ flowchart TB
 #### 3.3.3 Special Request (Permintaan Khusus)
 
 | Field | Type | Notes |
-|-------|------|-------|
+| ----- | ---- | ----- |
 | No. Permintaan | String | |
 | Requesting Facility | Reference | Puskesmas, RS, Clinic |
 | Program | Optional | Can be any program or none |
@@ -244,7 +244,7 @@ flowchart TB
 #### Standard Reports
 
 | Report | Frequency | Description |
-|--------|-----------|-------------|
+| ------ | --------- | ----------- |
 | Laporan Stok | On-demand | Current stock by location/category |
 | Kartu Stok | On-demand | Stock card per item |
 | Laporan Penerimaan | Monthly | All receiving transactions |
@@ -268,7 +268,7 @@ flowchart TB
 ## 4. User Roles & Permissions
 
 | Role | Permissions |
-|------|-------------|
+| ---- | ----------- |
 | **Admin** | Full access, user management, system settings |
 | **Kepala Instalasi** | Approve allocations, view all reports, dashboard |
 | **Admin Umum** | Manage receiving, create distributions, basic reports |
@@ -282,7 +282,7 @@ flowchart TB
 > Placeholder for warehouse/storage locations to be provided by client
 
 | Location Code | Location Name | Notes |
-|---------------|---------------|-------|
+| ------------- | ------------- | ----- |
 | LOC-001 | TBD | |
 | LOC-002 | TBD | |
 | ... | ... | |
@@ -355,7 +355,7 @@ tablib==3.9.0
 Import initial data via **Django Admin** using `django-import-export`:
 
 - Seed CSV files are in `backend/seed/`
-- Import order: units → categories → funding_sources → locations → suppliers → facilities → items → stock
+- Import order: `units` → `categories` → `funding_sources` → `programs` → `locations` → `suppliers` → `facilities` → `items` → `stock`
 
 See [README.md](./README.md) and [seed/README.md](../backend/seed/README.md) for detailed import instructions.
 
@@ -363,7 +363,7 @@ See [README.md](./README.md) and [seed/README.md](../backend/seed/README.md) for
 
 ## 8. Project Structure
 
-```
+```text
 DJANGO-IMS/
 ├── docker-compose.yml          # PostgreSQL + Redis services
 ├── .env                        # Environment variables
@@ -462,7 +462,7 @@ python manage.py createsuperuser
 ## 9. Resolved Questions
 
 | Question | Resolution |
-|----------|------------|
+| -------- | ---------- |
 | Supplier/Vendor Management | ✅ Track beyond eKatalog |
 | Puskesmas/Facility Master | ✅ 20+ facilities, access via API |
 | Expiry Alert Threshold | ✅ First day of expiry month = expired |

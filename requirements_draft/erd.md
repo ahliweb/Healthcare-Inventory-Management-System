@@ -33,6 +33,16 @@ erDiagram
         timestamp updated_at
     }
     
+    Program {
+        int id PK
+        string code UK "TB, HIV, MALARIA"
+        string name "Tuberkulosis"
+        text description NULL
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
     Location {
         int id PK
         string code UK "LOC-001"
@@ -89,7 +99,7 @@ erDiagram
         int satuan_id FK
         int kategori_id FK
         boolean is_program_item "P marker"
-        string program_name NULL "TB, HIV, Kusta"
+        int program_id FK NULL "TB, HIV, Kusta"
         decimal minimum_stock
         text description NULL
         boolean is_active
@@ -204,6 +214,7 @@ erDiagram
     %% Relationships - Lookup to Core
     Item ||--|| Unit : "has"
     Item ||--|| Category : "has"
+    Item ||--o| Program : "belongs_to"
     Stock ||--|| Item : "tracks"
     Stock ||--|| Location : "stored_in"
     Stock ||--|| FundingSource : "funded_by"
@@ -257,7 +268,13 @@ erDiagram
 - **Initial Data:** DAK, DAU, APBD, HIBAH, DONASI, etc.
 - **Note:** Different batches of same item can have different funding sources
 
-#### 4. Location
+#### 4. Program
+
+- **Purpose:** Track health program assignments (TB, HIV, Kusta)
+- **Indexes:** `code` (unique)
+- **Initial Data:** TB, HIV, KUSTA, MALARIA, etc.
+
+#### 5. Location
 
 - **Purpose:** Physical storage locations within warehouse
 - **Indexes:** `code` (unique)
@@ -408,7 +425,7 @@ Financial reports must track: "How much DAK money in current inventory?"
 
 `reserved` field prevents double allocation:
 
-```
+```text
 Available for new distributions = quantity - reserved
 ```
 
@@ -515,10 +532,11 @@ ALTER TABLE distribution ADD CONSTRAINT uq_dist_doc
 1. Unit (seed data from constants)
 2. Category (seed data from constants)
 3. FundingSource (seed data from constants)
-4. Location (TBD by client)
-5. Supplier (initially empty)
-6. Facility (import from existing list)
-7. User (create admin user)
+4. Program (seed data from constants)
+5. Location (TBD by client)
+6. Supplier (initially empty)
+7. Facility (import from existing list)
+8. User (create admin user)
 ```
 
 ### Phase 2: Core Tables

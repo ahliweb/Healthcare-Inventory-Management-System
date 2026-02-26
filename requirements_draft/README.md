@@ -9,9 +9,10 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 1. **units.csv** — Measurement units (TAB, KAP, SYR, BTL, AMP, etc.)
 2. **categories.csv** — Item categories (TABLET, KAPSUL, INJEKSI, VAKSIN, etc.)
 3. **funding_sources.csv** — Funding sources (DAK, DAU, APBD, etc.)
-4. **locations.csv** — Storage locations (customize with actual warehouse layout)
-5. **suppliers.csv** — Vendor/supplier list
-6. **facilities.csv** — Puskesmas and hospitals (customize with actual facility list)
+4. **programs.csv** — Health programs (TB, HIV, etc.)
+5. **locations.csv** — Storage locations (customize with actual warehouse layout)
+6. **suppliers.csv** — Vendor/supplier list
+7. **facilities.csv** — Puskesmas and hospitals (customize with actual facility list)
 
 ### Core Data (Import After Lookups)
 
@@ -23,15 +24,16 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 > [!IMPORTANT]
 > Import in this exact order to satisfy foreign key dependencies.
 
-```
+```text
 1. units.csv
 2. categories.csv
 3. funding_sources.csv
-4. locations.csv
-5. suppliers.csv
-6. facilities.csv
-7. items.csv        ← requires units + categories
-8. stock.csv        ← requires items + locations + funding sources
+4. programs.csv
+5. locations.csv
+6. suppliers.csv
+7. facilities.csv
+8. items.csv        ← requires units + categories + programs
+9. stock.csv        ← requires items + locations + funding sources
 ```
 
 ## How to Import (Django Admin)
@@ -51,13 +53,13 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 ### items.csv
 
 | Column | Required | Notes |
-|--------|----------|-------|
+| ------ | -------- | ----- |
 | kode_barang | ✅ Yes | Unique item code, max 50 chars |
 | nama_barang | ✅ Yes | Item name |
 | satuan | ✅ Yes | Unit **code** (e.g. `TAB`) |
 | kategori | ✅ Yes | Category **code** (e.g. `TABLET`) |
 | is_program_item | ❌ No | `1` for program items, default `0` |
-| program_name | ❌ No | e.g. TB, HIV, Kusta |
+| program | ❌ No | Program **code** (e.g. TB, HIV) from programs table |
 | minimum_stock | ❌ No | Low stock alert threshold, default `0` |
 | description | ❌ No | |
 | is_active | ❌ No | Default `1` |
@@ -65,7 +67,7 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 ### stock.csv
 
 | Column | Required | Notes |
-|--------|----------|-------|
+| ------ | -------- | ----- |
 | item | ✅ Yes | Item **kode_barang** |
 | location | ✅ Yes | Location **code** |
 | batch_lot | ✅ Yes | Batch/lot number |
@@ -89,7 +91,7 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 If migrating from the old `data.csv`:
 
 | Old Column | New Column | Notes |
-|-----------|-----------|-------|
+| ---------- | ---------- | ----- |
 | namaBarang | nama_barang | |
 | satuan | satuan (in items.csv) | Use Unit code (e.g. `TAB`) |
 | kategori | kategori (in items.csv) | Use Category code (e.g. `TABLET`) |

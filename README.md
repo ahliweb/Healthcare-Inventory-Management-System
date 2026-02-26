@@ -89,7 +89,7 @@ Visit `http://localhost:8000` for the app and `http://localhost:8000/admin/` for
 
 CSV seed files are provided in `backend/seed/`. Import them via the Django Admin panel using the **Import** button (powered by `django-import-export`).
 
-Import order: `units` → `categories` → `funding_sources` → `locations` → `suppliers` → `facilities` → `items` → `stock`
+Import order: `units` → `categories` → `funding_sources` → `programs` → `locations` → `suppliers` → `facilities` → `items` → `stock`
 
 See [`backend/seed/README.md`](backend/seed/README.md) for column specifications.
 
