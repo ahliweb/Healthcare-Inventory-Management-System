@@ -3,7 +3,7 @@ from import_export import resources, fields
 from import_export.admin import ImportExportModelAdmin
 from import_export.widgets import ForeignKeyWidget
 
-from .models import Unit, Category, FundingSource, Location, Supplier, Facility, Item
+from .models import Unit, Category, FundingSource, Program, Location, Supplier, Facility, Item
 
 
 # ── Resources ──────────────────────────────────────────────
@@ -63,6 +63,15 @@ class FacilityResource(resources.ModelResource):
         report_skipped = False
 
 
+class ProgramResource(resources.ModelResource):
+    class Meta:
+        model = Program
+        fields = ('id', 'code', 'name', 'description', 'is_active')
+        import_id_fields = ('code',)
+        skip_unchanged = True
+        report_skipped = False
+
+
 class ItemResource(resources.ModelResource):
     satuan = fields.Field(
         column_name='satuan',
@@ -74,15 +83,20 @@ class ItemResource(resources.ModelResource):
         attribute='kategori',
         widget=ForeignKeyWidget(Category, field='code'),
     )
+    program = fields.Field(
+        column_name='program',
+        attribute='program',
+        widget=ForeignKeyWidget(Program, field='code'),
+    )
 
     class Meta:
         model = Item
         fields = (
             'id', 'kode_barang', 'nama_barang', 'satuan', 'kategori',
-            'is_program_item', 'program_name', 'minimum_stock',
+            'is_program_item', 'program', 'minimum_stock',
             'description', 'is_active',
         )
-        import_id_fields = ('kode_barang',)
+        import_id_fields = ('nama_barang',)
         skip_unchanged = True
         report_skipped = False
 
@@ -137,13 +151,21 @@ class FacilityAdmin(ImportExportModelAdmin):
     search_fields = ('code', 'name')
 
 
+@admin.register(Program)
+class ProgramAdmin(ImportExportModelAdmin):
+    resource_classes = [ProgramResource]
+    list_display = ('code', 'name', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('code', 'name')
+
+
 @admin.register(Item)
 class ItemAdmin(ImportExportModelAdmin):
     resource_classes = [ItemResource]
     list_display = (
         'kode_barang', 'nama_barang', 'satuan', 'kategori',
-        'is_program_item', 'program_name', 'minimum_stock', 'is_active',
+        'is_program_item', 'program', 'minimum_stock', 'is_active',
     )
-    list_filter = ('kategori', 'is_program_item', 'is_active', 'satuan')
-    search_fields = ('kode_barang', 'nama_barang', 'program_name')
+    list_filter = ('kategori', 'is_program_item', 'is_active', 'satuan', 'program')
+    search_fields = ('kode_barang', 'nama_barang', 'program__code', 'program__name')
     list_per_page = 50

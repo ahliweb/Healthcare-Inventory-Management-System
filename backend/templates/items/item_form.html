@@ -47,10 +47,10 @@
 
 {% block extra_js %}
 <script>
-    // Toggle program_name visibility based on is_program_item checkbox
+    // Toggle program visibility based on is_program_item checkbox
     document.addEventListener('DOMContentLoaded', () => {
         const checkbox = document.getElementById('id_is_program_item');
-        const programField = document.getElementById('id_program_name')?.closest('.mb-3');
+        const programField = document.getElementById('id_program')?.closest('.mb-3');
 
         function toggleProgramField() {
             if (programField) {

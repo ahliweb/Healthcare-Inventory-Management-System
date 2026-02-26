@@ -46,6 +46,21 @@ class FundingSource(TimeStampedModel):
         return f"{self.code} - {self.name}"
 
 
+class Program(TimeStampedModel):
+    """Health program lookup table (TB, HIV, MALARIA, etc.)."""
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'programs'
+        ordering = ['code']
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
 class Location(TimeStampedModel):
     """Storage location lookup table."""
     code = models.CharField(max_length=20, unique=True)
@@ -109,7 +124,7 @@ class Facility(TimeStampedModel):
 
 class Item(TimeStampedModel):
     """Central item registry (Master Barang)."""
-    kode_barang = models.CharField(max_length=50, unique=True)
+    kode_barang = models.CharField(max_length=50, unique=True, blank=True)
     nama_barang = models.CharField(max_length=255)
     satuan = models.ForeignKey(
         Unit,
@@ -125,10 +140,13 @@ class Item(TimeStampedModel):
         default=False,
         help_text='Designated program item [P]',
     )
-    program_name = models.CharField(
-        max_length=100,
+    program = models.ForeignKey(
+        Program,
+        on_delete=models.PROTECT,
+        null=True,
         blank=True,
-        help_text='Program name (TB, HIV, Kusta, etc.)',
+        related_name='items',
+        help_text='Health program (TB, HIV, Malaria, etc.)',
     )
     minimum_stock = models.DecimalField(
         max_digits=12,
@@ -148,3 +166,27 @@ class Item(TimeStampedModel):
 
     def __str__(self):
         return f"{self.kode_barang} - {self.nama_barang}"
+
+    @staticmethod
+    def generate_kode_barang():
+        """Generate next sequential code: ITM-00001, ITM-00002, etc."""
+        last = (
+            Item.objects.filter(kode_barang__startswith='ITM-')
+            .order_by('-kode_barang')
+            .values_list('kode_barang', flat=True)
+            .first()
+        )
+        if last:
+            try:
+                num = int(last.split('-')[-1]) + 1
+            except (ValueError, IndexError):
+                num = Item.objects.count() + 1
+        else:
+            num = 1
+        return f"ITM-{num:05d}"
+
+    def save(self, *args, **kwargs):
+        if not self.kode_barang:
+            self.kode_barang = self.generate_kode_barang()
+        super().save(*args, **kwargs)
+

@@ -9,11 +9,12 @@ Import lookup tables first, then items that reference them:
 1. `units.csv`
 2. `categories.csv`
 3. `funding_sources.csv`
-4. `locations.csv`
-5. `suppliers.csv`
-6. `facilities.csv`
-7. `items.csv` ← requires units + categories to exist first
-8. `stock.csv` ← requires items + locations + funding sources to exist first
+4. `programs.csv` ← NEW: health programs (TB, HIV, etc.)
+5. `locations.csv`
+6. `suppliers.csv`
+7. `facilities.csv`
+8. `items.csv` ← requires units + categories + programs to exist first
+9. `stock.csv` ← requires items + locations + funding sources to exist first
 
 ## How to Import
 
@@ -90,19 +91,29 @@ Import lookup tables first, then items that reference them:
 | `facility_type` | ❌ No | `PUSKESMAS` | Options: `PUSKESMAS`, `RS`, `CLINIC` |
 | `is_active` | ❌ No | `1` | |
 
+### programs.csv
+
+| Column | Required | Default | Notes |
+| -------- | ---------- | --------- | ------- |
+| `code` | ✅ Yes | — | Unique, max 20 chars (e.g. `TB`, `HIV`) |
+| `name` | ✅ Yes | — | Display name (e.g. `Tuberkulosis`) |
+| `description` | ❌ No | blank | |
+| `is_active` | ❌ No | `1` | |
+
 ### items.csv
 
 | Column | Required | Default | Notes |
 | -------- | ---------- | --------- | ------- |
-| `kode_barang` | ✅ Yes | — | Unique item code, max 50 chars |
-| `nama_barang` | ✅ Yes | — | Item name |
+| `nama_barang` | ✅ Yes | — | Item name (used as unique identifier for import) |
 | `satuan` | ✅ Yes | — | Unit **code** (e.g. `TAB`) |
 | `kategori` | ✅ Yes | — | Category **code** (e.g. `TABLET`) |
 | `is_program_item` | ❌ No | `0` | `1` for program items |
-| `program_name` | ❌ No | blank | e.g. TB, HIV, Kusta |
+| `program` | ❌ No | blank | Program **code** (e.g. `TB`, `HIV`) from programs table |
 | `minimum_stock` | ❌ No | `0` | Low stock alert threshold |
 | `description` | ❌ No | blank | |
 | `is_active` | ❌ No | `1` | |
+
+> **Note:** `kode_barang` is auto-generated as `ITM-00001`, `ITM-00002`, etc. You don't need to provide it.
 
 ### stock.csv
 

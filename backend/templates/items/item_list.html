@@ -14,7 +14,8 @@
 
     <div class="px-3 py-2 border-bottom bg-light">
         <form method="get" class="filter-form">
-            <input type="text" name="q" class="form-control" placeholder="Cari kode/nama barang..." value="{{ search }}">
+            <input type="text" name="q" class="form-control" placeholder="Cari kode/nama barang..."
+                value="{{ search }}">
             <select name="kategori" class="form-select">
                 <option value="">Semua Kategori</option>
                 {% for cat in categories %}
@@ -55,17 +56,19 @@
                     <td><span class="badge bg-light text-dark border">{{ item.kategori.name }}</span></td>
                     <td>
                         {% if item.is_program_item %}
-                        <span class="badge bg-primary-subtle text-primary">[P] {{ item.program_name }}</span>
+                        <span class="badge bg-primary-subtle text-primary">[P] {{ item.program.name }}</span>
                         {% else %}
                         <span class="text-muted">-</span>
                         {% endif %}
                     </td>
                     <td>{{ item.minimum_stock }}</td>
                     <td class="text-end">
-                        <a href="{% url 'items:item_update' item.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                        <a href="{% url 'items:item_update' item.pk %}" class="btn btn-sm btn-outline-secondary"
+                            title="Edit">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <a href="{% url 'items:item_delete' item.pk %}" class="btn btn-sm btn-outline-danger" title="Hapus">
+                        <a href="{% url 'items:item_delete' item.pk %}" class="btn btn-sm btn-outline-danger"
+                            title="Hapus">
                             <i class="bi bi-trash"></i>
                         </a>
                     </td>
@@ -90,12 +93,13 @@
         <nav>
             <ul class="pagination pagination-sm mb-0">
                 {% if items.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page={{ items.previous_page_number }}">&laquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ items.previous_page_number }}">&laquo;</a>
+                </li>
                 {% endif %}
                 {% for num in items.paginator.page_range %}
-                    {% if items.number == num %}
-                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                    {% endif %}
+                {% if items.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% endif %}
                 {% endfor %}
                 {% if items.has_next %}
                 <li class="page-item"><a class="page-link" href="?page={{ items.next_page_number }}">&raquo;</a></li>

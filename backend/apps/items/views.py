@@ -19,7 +19,8 @@ def item_list(request):
         queryset = queryset.filter(
             Q(kode_barang__icontains=search) |
             Q(nama_barang__icontains=search) |
-            Q(program_name__icontains=search)
+            Q(program__name__icontains=search) |
+            Q(program__code__icontains=search)
         )
 
     # Filters
