@@ -2,6 +2,9 @@
 
 CSV templates for importing master data via Django Admin.
 
+> [!NOTE]
+> Seed CSV templates are intended for **master data + initial stock only**. Transactional modules (`receiving`, `distribution`, `recall`, `expired`) are operational documents and should be created via app workflow or Admin forms.
+
 ## Import Order (important!)
 
 Import lookup tables first, then items that reference them:

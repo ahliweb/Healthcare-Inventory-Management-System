@@ -41,6 +41,8 @@
 │  │  ├─ apps/stock      (Stock, Transactions)                 │  │
 │  │  ├─ apps/receiving  (Penerimaan)                          │  │
 │  │  ├─ apps/distribution (Distribusi)                        │  │
+│  │  ├─ apps/recall     (Recall/Retur ke Supplier)            │  │
+│  │  ├─ apps/expired    (Kedaluwarsa/Pemusnahan)              │  │
 │  │  └─ apps/reports    (Laporan - placeholder)               │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                          │                                       │
@@ -241,6 +243,39 @@ flowchart TB
 
 ### 3.4 📊 Reporting Module
 
+### 3.4 ♻️ Recall Module (Recall/Retur)
+
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| No. Dokumen Recall | String | Auto-generated `REC-YYYYMM-XXXXX` if blank |
+| Tanggal Recall | Date | |
+| Supplier | Reference | ForeignKey to Supplier |
+| Items | Array | Item, Stock Batch, Qty, Alasan |
+| Status | Enum | Draft → Submitted → Verified → Completed |
+| Verified By / At | Reference + Timestamp | Set on verification |
+| Notes | Text | Optional notes |
+
+**Verification behavior:**
+- Deducts stock quantity per selected batch
+- Creates `Transaction(type=OUT, reference_type=RECALL)` for each item
+
+### 3.5 🗑️ Expired Module (Kedaluwarsa/Pemusnahan)
+
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| No. Dokumen Expired | String | Auto-generated `EXP-YYYYMM-XXXXX` if blank |
+| Tanggal Laporan | Date | |
+| Items | Array | Item, Stock Batch, Qty, Keterangan |
+| Status | Enum | Draft → Submitted → Verified → Disposed |
+| Verified By / At | Reference + Timestamp | Set on verification |
+| Notes | Text | Optional notes |
+
+**Verification behavior:**
+- Deducts stock quantity per selected batch
+- Creates `Transaction(type=OUT, reference_type=EXPIRED)` for each item
+
+### 3.6 📊 Reporting Module
+
 #### Standard Reports
 
 | Report | Frequency | Description |
@@ -324,6 +359,9 @@ tablib==3.9.0
 - [x] Transaction history viewer
 - [x] Receiving module (list, create, detail)
 - [x] Distribution module (list, create, detail)
+- [x] Recall module (list, create, edit, detail, submit, verify, complete)
+- [x] Expired module (list, create, edit, detail, submit, verify, dispose)
+- [x] Stock mutation + transaction posting for Recall and Expired on verify
 
 ### Alerts & Notifications
 
@@ -383,6 +421,8 @@ DJANGO-IMS/
 │   │   ├── stock/              # Stock management + Transaction audit trail
 │   │   ├── receiving/          # Penerimaan module
 │   │   ├── distribution/       # Distribusi module
+│   │   ├── recall/             # Recall/retur ke supplier
+│   │   ├── expired/            # Kedaluwarsa/pemusnahan
 │   │   ├── reports/            # Reporting module (placeholder)
 │   │   └── users/              # Custom User model with roles
 │   ├── seed/                   # CSV seed data files
@@ -393,6 +433,8 @@ DJANGO-IMS/
 │   │   ├── stock/
 │   │   ├── receiving/
 │   │   ├── distribution/
+│   │   ├── recall/
+│   │   ├── expired/
 │   │   ├── reports/
 │   │   └── registration/
 │   └── static/                 # Static assets
@@ -485,14 +527,16 @@ python manage.py createsuperuser
 6. ✅ Django models + migrations
 7. ✅ Django Admin customization (with `django-import-export`)
 8. ✅ Seed data CSV templates created
-9. ✅ Django template-based UI (dashboard, items, stock, receiving, distribution)
+9. ✅ Django template-based UI (dashboard, items, stock, receiving, distribution, recall, expired)
 10. ⬜ Reports module implementation (currently placeholder)
 11. ⬜ Celery tasks for expiry/low-stock alerts
 12. ⬜ Role-based permission enforcement (middleware/decorators)
 13. ⬜ Receiving verification workflow (status transitions + stock creation)
 14. ⬜ Distribution workflow (FEFO batch selection, stock reservation)
-15. ⬜ Excel/PDF export for reports
-16. ⬜ React frontend (if/when decided)
-17. ⬜ DRF REST API (if/when React frontend is started)
-18. ⬜ Production Docker Compose setup
-19. ⬜ Testing & deployment
+15. ✅ Recall workflow (status transitions + stock deduction + transaction posting)
+16. ✅ Expired workflow (status transitions + stock deduction + transaction posting)
+17. ⬜ Excel/PDF export for reports
+18. ⬜ React frontend (if/when decided)
+19. ⬜ DRF REST API (if/when React frontend is started)
+20. ⬜ Production Docker Compose setup
+21. ⬜ Testing & deployment

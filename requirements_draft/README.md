@@ -4,6 +4,9 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 
 ## Seed Files
 
+> [!NOTE]
+> Seed CSV files only cover **master + initial stock** data. Transactional documents (`Receiving`, `Distribution`, `Recall`, `Expired`) are created through app workflows or Django Admin, not seeded via CSV templates.
+
 ### Lookup Tables (Import First)
 
 1. **units.csv** — Measurement units (TAB, KAP, SYR, BTL, AMP, etc.)

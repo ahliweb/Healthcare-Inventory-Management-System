@@ -9,6 +9,8 @@ A web-based inventory management system for managing medicine and medical equipm
 - **FEFO Management** — First Expiry, First Out tracking with expiry date monitoring
 - **Receiving Module** — Record incoming stock from procurement (eKatalog) and grants (Hibah)
 - **Distribution Module** — Handle LPLPO requests, planned allocations, and special requests to Puskesmas/facilities
+- **Recall Module** — Manage supplier returns with Draft → Submitted → Verified → Completed workflow
+- **Expired Module** — Manage expired/disposal documents with Draft → Submitted → Verified → Disposed workflow
 - **Funding Source Tracking** — Track budget allocation per batch (DAK, DAU, APBD, etc.)
 - **Audit Trail** — Immutable transaction log for all stock movements
 - **CSV Import/Export** — Bulk data operations via Django Admin (`django-import-export`)
@@ -93,6 +95,13 @@ From repository root, use helper script:
 .\scripts\run-django-test.ps1 -Target apps.items
 ```
 
+Examples:
+
+```powershell
+.\scripts\run-django-test.ps1 -Target apps.recall
+.\scripts\run-django-test.ps1 -Target apps.expired
+```
+
 Notes:
 
 - Script auto-activates `venv` (if available)
@@ -123,6 +132,8 @@ DJANGO-IMS/
 │   │   ├── stock/              # Stock + transaction audit trail
 │   │   ├── receiving/          # Incoming stock (procurement/grants)
 │   │   ├── distribution/       # Outgoing stock to facilities
+│   │   ├── recall/             # Return/recall to supplier
+│   │   ├── expired/            # Expired/disposal workflow
 │   │   ├── reports/            # Reporting (in progress)
 │   │   └── users/              # Custom user model with roles
 │   ├── seed/                   # CSV seed data
@@ -140,6 +151,13 @@ DJANGO-IMS/
 | **Admin Umum**       | Receiving, distribution, basic reports   |
 | **Petugas Gudang**   | Stock operations, receiving verification |
 | **Petugas Keuangan** | Financial reports, stock valuation       |
+
+## 🔄 Workflow Snapshot
+
+- **Receiving:** Draft → Submitted → Verified (verification creates stock + `Transaction(IN)`)
+- **Distribution:** Draft/Submitted → Verified → Prepared → Distributed (`Transaction(OUT)` on distribution)
+- **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)` on verify)
+- **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)` on verify)
 
 ## 📖 Documentation
 

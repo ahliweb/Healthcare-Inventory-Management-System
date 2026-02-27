@@ -131,7 +131,7 @@ erDiagram
         decimal quantity
         decimal unit_price NULL
         int sumber_dana_id FK NULL
-        string reference_type "Receiving, Distribution, Adjustment"
+        string reference_type "Receiving, Distribution, Adjustment, Recall, Expired"
         int reference_id "Polymorphic reference"
         int user_id FK
         text notes NULL
@@ -210,6 +210,55 @@ erDiagram
         text notes NULL
         timestamp created_at
     }
+
+      %% Recall Module
+      Recall {
+        int id PK
+        string document_number UK
+        date recall_date
+        int supplier_id FK
+        string status "Draft, Submitted, Verified, Completed"
+        int created_by_id FK
+        int verified_by_id FK NULL
+        timestamp verified_at NULL
+        text notes NULL
+        timestamp created_at
+        timestamp updated_at
+      }
+
+      RecallItem {
+        int id PK
+        int recall_id FK
+        int item_id FK
+        int stock_id FK
+        decimal quantity
+        text notes NULL "Alasan recall"
+        timestamp created_at
+      }
+
+      %% Expired Module
+      Expired {
+        int id PK
+        string document_number UK
+        date report_date
+        string status "Draft, Submitted, Verified, Disposed"
+        int created_by_id FK
+        int verified_by_id FK NULL
+        timestamp verified_at NULL
+        text notes NULL
+        timestamp created_at
+        timestamp updated_at
+      }
+
+      ExpiredItem {
+        int id PK
+        int expired_id FK
+        int item_id FK
+        int stock_id FK
+        decimal quantity
+        text notes NULL "Detail pemusnahan"
+        timestamp created_at
+      }
     
     %% Relationships - Lookup to Core
     Item ||--|| Unit : "has"
@@ -243,6 +292,21 @@ erDiagram
     Distribution ||--o{ DistributionItem : "contains"
     DistributionItem ||--|| Item : "distributes"
     DistributionItem ||--o| Stock : "from_batch"
+
+    %% Recall relationships
+    Recall ||--|| Supplier : "to_supplier"
+    Recall ||--|| User : "created_by"
+    Recall ||--o| User : "verified_by"
+    Recall ||--o{ RecallItem : "contains"
+    RecallItem ||--|| Item : "recalls"
+    RecallItem ||--|| Stock : "from_batch"
+
+    %% Expired relationships
+    Expired ||--|| User : "created_by"
+    Expired ||--o| User : "verified_by"
+    Expired ||--o{ ExpiredItem : "contains"
+    ExpiredItem ||--|| Item : "disposes"
+    ExpiredItem ||--|| Stock : "from_batch"
 ```
 
 ## Table Details
@@ -408,6 +472,38 @@ erDiagram
   3. Preparation: Update `Stock.reserved += quantity_approved`
   4. Distribution: Update `Stock.quantity -= quantity_approved`, `reserved -= quantity_approved`, create `Transaction`
 
+#### 16. Recall
+
+- **Purpose:** Return recalled items to supplier with auditable stock deduction
+- **Indexes:**
+  - `document_number` (unique)
+  - `(status, recall_date)` for workflow queries
+- **Status Workflow:** Draft → Submitted → Verified → Completed
+- **Verification:** Deducts stock and creates `Transaction(type=OUT, reference_type=RECALL)`
+
+#### 17. RecallItem
+
+- **Purpose:** Line items for each recall document
+- **Key Fields:**
+  - `stock_id`: Exact batch to be recalled
+  - `quantity`: Quantity deducted on verification
+
+#### 18. Expired
+
+- **Purpose:** Record expired stock disposal documents
+- **Indexes:**
+  - `document_number` (unique)
+  - `(status, report_date)` for workflow queries
+- **Status Workflow:** Draft → Submitted → Verified → Disposed
+- **Verification:** Deducts stock and creates `Transaction(type=OUT, reference_type=EXPIRED)`
+
+#### 19. ExpiredItem
+
+- **Purpose:** Line items for each expired/disposal document
+- **Key Fields:**
+  - `stock_id`: Exact expired batch
+  - `quantity`: Quantity deducted on verification
+
 ---
 
 ## Key Design Decisions
@@ -437,7 +533,16 @@ Immutable log of all movements. Never delete, only add. Stock card = query trans
 
 ### 4. Polymorphic Reference
 
-`reference_type` + `reference_id` allows transactions to link to Receiving, Distribution, or manual Adjustments without complex foreign keys.
+`reference_type` + `reference_id` allows transactions to link to Receiving, Distribution, Recall, Expired, or manual Adjustments without complex foreign keys.
+
+### 7. Recall & Expired Verification Pattern
+
+Verification is the stock-impacting checkpoint:
+
+- Validates selected batch belongs to selected item
+- Validates requested quantity does not exceed available stock
+- Deducts `Stock.quantity`
+- Creates immutable `Transaction(type=OUT)` rows with `reference_type=RECALL|EXPIRED`
 
 ### 5. FEFO Implementation
 
@@ -552,6 +657,8 @@ ALTER TABLE distribution ADD CONSTRAINT uq_dist_doc
 ```python
 11-13. Receiving tables (empty, ready for use)
 14-15. Distribution tables (empty, ready for use)
+16-17. Recall tables (empty, ready for use)
+18-19. Expired tables (empty, ready for use)
 ```
 
 ### CSV Import Logic
