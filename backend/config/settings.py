@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'apps.stock',
     'apps.receiving',
     'apps.distribution',
+    'apps.recall',
+    'apps.expired',
     'apps.reports',
 ]
 

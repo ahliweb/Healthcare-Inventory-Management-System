@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Recall Barang - Healthcare IMS{% endblock %}
+{% block page_title %}Recall / Retur Barang{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <h5><i class="bi bi-arrow-return-left me-2"></i>Daftar Recall</h5>
+        <a href="{% url 'admin:recall_recall_add' %}" class="btn btn-primary btn-sm" target="_blank">
+            <i class="bi bi-plus-lg me-1"></i>Buat Via Admin
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>No. Dokumen</th>
+                    <th>Tanggal</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                    <th>Dibuat oleh</th>
+                    <!-- <th class="text-end">Aksi</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in recalls %}
+                <tr>
+                    <td><a href="{% url 'admin:recall_recall_change' r.pk %}" target="_blank"
+                            class="fw-semibold text-decoration-none">{{ r.document_number|default:"[Draft]" }}</a></td>
+                    <td>{{ r.recall_date|date:"d/m/Y" }}</td>
+                    <td>{{ r.supplier.name|default:"-" }}</td>
+                    <td>
+                        <span class="badge-status badge-{{ r.status|lower }}">{{ r.get_status_display }}</span>
+                    </td>
+                    <td>{{ r.created_by }}</td>
+                    <!-- <td class="text-end">
+                        <a href="{% url 'admin:recall_recall_change' r.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td> -->
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <i class="bi bi-arrow-return-left d-block"></i>
+                            <p>Belum ada data recall</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
