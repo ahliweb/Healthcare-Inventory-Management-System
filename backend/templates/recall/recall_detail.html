@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Detail Recall {{ recall.document_number }} — Healthcare IMS{% endblock %}
+{% block page_title %}Detail Recall{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card content-card">
+            <div class="card-header"><span>Info Recall</span></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted">No. Dokumen</dt>
+                    <dd class="col-7 fw-semibold">{{ recall.document_number }}</dd>
+
+                    <dt class="col-5 text-muted">Tanggal</dt>
+                    <dd class="col-7">{{ recall.recall_date|date:"d/m/Y" }}</dd>
+
+                    <dt class="col-5 text-muted">Supplier</dt>
+                    <dd class="col-7">{{ recall.supplier.name }}</dd>
+
+                    <dt class="col-5 text-muted">Status</dt>
+                    <dd class="col-7"><span class="badge-status badge-{{ recall.status|lower }}">{{ recall.get_status_display }}</span></dd>
+
+                    <dt class="col-5 text-muted">Dibuat oleh</dt>
+                    <dd class="col-7">{{ recall.created_by }}</dd>
+
+                    {% if recall.verified_by %}
+                    <dt class="col-5 text-muted">Diverifikasi</dt>
+                    <dd class="col-7">{{ recall.verified_by }} <br><small class="text-muted">{{ recall.verified_at|date:"d/m/Y H:i" }}</small></dd>
+                    {% endif %}
+
+                    {% if recall.notes %}
+                    <dt class="col-5 text-muted">Catatan</dt>
+                    <dd class="col-7">{{ recall.notes }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            {% if recall.status == 'DRAFT' %}
+            <a href="{% url 'recall:recall_edit' recall.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+            <form method="post" action="{% url 'recall:recall_submit' recall.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-send me-1"></i>Ajukan
+                </button>
+            </form>
+            {% elif recall.status == 'SUBMITTED' %}
+            <a href="{% url 'recall:recall_edit' recall.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Edit
+            </a>
+            <form method="post" action="{% url 'recall:recall_verify' recall.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm">
+                    <i class="bi bi-patch-check me-1"></i>Verifikasi
+                </button>
+            </form>
+            {% elif recall.status == 'VERIFIED' %}
+            <form method="post" action="{% url 'recall:recall_complete' recall.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm">
+                    <i class="bi bi-check2-circle me-1"></i>Tandai Selesai
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'recall:recall_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Kembali
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card content-card">
+            <div class="card-header"><span>Daftar Item Recall</span></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Kode</th>
+                                <th>Nama Barang</th>
+                                <th>Batch</th>
+                                <th>Lokasi</th>
+                                <th class="text-end">Qty</th>
+                                <th>Alasan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ri in items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><code>{{ ri.item.kode_barang }}</code></td>
+                                <td>{{ ri.item.nama_barang }}</td>
+                                <td>{{ ri.stock.batch_lot }}</td>
+                                <td>{{ ri.stock.location.name }}</td>
+                                <td class="text-end fw-semibold">{{ ri.quantity }}</td>
+                                <td class="text-muted small">{{ ri.notes|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox d-block"></i>
+                                        <p>Belum ada item recall</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -16,6 +16,7 @@ class ExpiredAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at', 'verified_at')
     inlines = [ExpiredItemInline]
     autocomplete_fields = ['created_by', 'verified_by']
+    actions = ['mark_disposed']
 
     fieldsets = (
         ('Informasi Expired', {
@@ -38,3 +39,18 @@ class ExpiredAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at'),
         }),
     )
+
+    @admin.action(description='Tandai Dimusnahkan (hanya status Terverifikasi)')
+    def mark_disposed(self, request, queryset):
+        verified_qs = queryset.filter(status=Expired.Status.VERIFIED)
+        skipped = queryset.count() - verified_qs.count()
+        updated = verified_qs.update(status=Expired.Status.DISPOSED)
+
+        if updated:
+            self.message_user(request, f'{updated} dokumen expired ditandai dimusnahkan.')
+        if skipped:
+            self.message_user(
+                request,
+                f'{skipped} dokumen dilewati karena bukan status Terverifikasi.',
+                level='warning',
+            )
