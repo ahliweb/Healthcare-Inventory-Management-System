@@ -101,6 +101,8 @@ class Transaction(models.Model):
         DISTRIBUTION = 'DISTRIBUTION', 'Distribusi'
         ADJUSTMENT = 'ADJUSTMENT', 'Penyesuaian'
         INITIAL_IMPORT = 'INITIAL_IMPORT', 'Import Awal'
+        RECALL = 'RECALL', 'Recall'
+        EXPIRED = 'EXPIRED', 'Kedaluwarsa'
 
     transaction_type = models.CharField(max_length=10, choices=TransactionType.choices)
     item = models.ForeignKey(

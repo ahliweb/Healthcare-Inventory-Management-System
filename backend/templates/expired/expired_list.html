@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Barang Kedaluwarsa - Healthcare IMS{% endblock %}
+{% block page_title %}Barang Kedaluwarsa{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <h5><i class="bi bi-trash me-2"></i>Daftar Pemusnahan (Expired)</h5>
+        <a href="{% url 'admin:expired_expired_add' %}" class="btn btn-primary btn-sm" target="_blank">
+            <i class="bi bi-plus-lg me-1"></i>Buat Via Admin
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>No. Dokumen</th>
+                    <th>Tanggal</th>
+                    <th>Status</th>
+                    <th>Dibuat oleh</th>
+                    <!-- <th class="text-end">Aksi</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in expired_items %}
+                <tr>
+                    <td><a href="{% url 'admin:expired_expired_change' e.pk %}" target="_blank"
+                            class="fw-semibold text-decoration-none">{{ e.document_number|default:"[Draft]" }}</a></td>
+                    <td>{{ e.report_date|date:"d/m/Y" }}</td>
+                    <td>
+                        <span class="badge-status badge-{{ e.status|lower }}">{{ e.get_status_display }}</span>
+                    </td>
+                    <td>{{ e.created_by }}</td>
+                    <!-- <td class="text-end">
+                        <a href="{% url 'admin:expired_expired_change' e.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td> -->
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <i class="bi bi-trash d-block"></i>
+                            <p>Belum ada data barang kedaluwarsa</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -33,6 +33,8 @@ urlpatterns = [
     path('stock/', include('apps.stock.urls')),
     path('receiving/', include('apps.receiving.urls')),
     path('distribution/', include('apps.distribution.urls')),
+    path('recall/', include('apps.recall.urls')),
+    path('expired/', include('apps.expired.urls')),
     path('reports/', include('apps.reports.urls')),
 ]
 

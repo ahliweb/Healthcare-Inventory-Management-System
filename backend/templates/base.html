@@ -53,6 +53,14 @@
                     class="sidebar-link {% if request.resolver_match.app_name == 'distribution' %}active{% endif %}">
                     <i class="bi bi-send"></i><span>Distribusi</span>
                 </a>
+                <a href="{% url 'recall:recall_list' %}"
+                    class="sidebar-link {% if request.resolver_match.app_name == 'recall' %}active{% endif %}">
+                    <i class="bi bi-arrow-return-left"></i><span>Recall / Retur</span>
+                </a>
+                <a href="{% url 'expired:expired_list' %}"
+                    class="sidebar-link {% if request.resolver_match.app_name == 'expired' %}active{% endif %}">
+                    <i class="bi bi-trash"></i><span>Kedaluwarsa</span>
+                </a>
 
                 <div class="sidebar-section-title">Transaksi Stok</div>
                 <a href="{% url 'stock:transaction_list' %}"
