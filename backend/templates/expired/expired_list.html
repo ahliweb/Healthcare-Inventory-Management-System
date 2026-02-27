@@ -7,9 +7,26 @@
 <div class="table-container">
     <div class="table-header">
         <h5><i class="bi bi-trash me-2"></i>Daftar Pemusnahan (Expired)</h5>
-        <a href="{% url 'admin:expired_expired_add' %}" class="btn btn-primary btn-sm" target="_blank">
-            <i class="bi bi-plus-lg me-1"></i>Buat Via Admin
+        <a href="{% url 'expired:expired_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Buat Dokumen
         </a>
+    </div>
+
+    <div class="px-3 py-2 border-bottom bg-light">
+        <form method="get" class="filter-form">
+            <input type="text" name="q" class="form-control" placeholder="Cari no. dokumen..." value="{{ search }}">
+            <select name="status" class="form-select">
+                <option value="">Semua Status</option>
+                <option value="DRAFT" {{ status_draft }}>Draft</option>
+                <option value="SUBMITTED" {{ status_submitted }}>Diajukan</option>
+                <option value="VERIFIED" {{ status_verified }}>Terverifikasi</option>
+                <option value="DISPOSED" {{ status_disposed }}>Dimusnahkan</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
+            {% if search or selected_status %}
+            <a href="{% url 'expired:expired_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
+            {% endif %}
+        </form>
     </div>
 
     <div class="table-responsive">
@@ -26,18 +43,12 @@
             <tbody>
                 {% for e in expired_items %}
                 <tr>
-                    <td><a href="{% url 'admin:expired_expired_change' e.pk %}" target="_blank"
-                            class="fw-semibold text-decoration-none">{{ e.document_number|default:"[Draft]" }}</a></td>
+                        <td><a href="{% url 'expired:expired_detail' e.pk %}" class="fw-semibold text-decoration-none">{{ e.document_number|default:"[Draft]" }}</a></td>
                     <td>{{ e.report_date|date:"d/m/Y" }}</td>
                     <td>
                         <span class="badge-status badge-{{ e.status|lower }}">{{ e.get_status_display }}</span>
                     </td>
                     <td>{{ e.created_by }}</td>
-                    <!-- <td class="text-end">
-                        <a href="{% url 'admin:expired_expired_change' e.pk %}" target="_blank" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </td> -->
                 </tr>
                 {% empty %}
                 <tr>

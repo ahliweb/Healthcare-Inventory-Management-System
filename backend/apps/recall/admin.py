@@ -16,6 +16,7 @@ class RecallAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at', 'verified_at')
     inlines = [RecallItemInline]
     autocomplete_fields = ['supplier', 'created_by', 'verified_by']
+    actions = ['mark_completed']
 
     fieldsets = (
         ('Informasi Recall', {
@@ -39,3 +40,18 @@ class RecallAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at'),
         }),
     )
+
+    @admin.action(description='Tandai Selesai (hanya status Terverifikasi)')
+    def mark_completed(self, request, queryset):
+        verified_qs = queryset.filter(status=Recall.Status.VERIFIED)
+        skipped = queryset.count() - verified_qs.count()
+        updated = verified_qs.update(status=Recall.Status.COMPLETED)
+
+        if updated:
+            self.message_user(request, f'{updated} dokumen recall ditandai selesai.')
+        if skipped:
+            self.message_user(
+                request,
+                f'{skipped} dokumen dilewati karena bukan status Terverifikasi.',
+                level='warning',
+            )
