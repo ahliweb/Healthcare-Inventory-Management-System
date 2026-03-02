@@ -41,6 +41,7 @@ requirements_draft/Book1.xlsx
 requirements_draft/obat-progran.txt
 .agents/
 security-audit/
+requirements_draft/*.csv
 
 # Excel temp files
 ~$*.xlsx
