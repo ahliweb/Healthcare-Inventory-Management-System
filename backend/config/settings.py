@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.recall',
     'apps.expired',
     'apps.reports',
+    'apps.stock_opname',
 ]
 
 MIDDLEWARE = [

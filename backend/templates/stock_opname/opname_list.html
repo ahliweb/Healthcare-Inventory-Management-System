@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Opname — Healthcare IMS{% endblock %}
+{% block page_title %}Stock Opname{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-12">
+        <div class="card content-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clipboard-check me-2"></i>Daftar Stock Opname</span>
+                <a href="{% url 'stock_opname:opname_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>Buat Baru
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <form method="get" class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <input type="text" name="q" class="form-control form-control-sm" placeholder="Cari nomor dokumen..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">Semua Status</option>
+                            {% for val, label in status_choices %}
+                            <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="period" class="form-select form-select-sm">
+                            <option value="">Semua Periode</option>
+                            {% for val, label in period_choices %}
+                            <option value="{{ val }}" {% if selected_period == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i></button>
+                        {% if search or selected_status or selected_period %}
+                        <a href="{% url 'stock_opname:opname_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
+                        {% endif %}
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>No. Dokumen</th>
+                                <th>Periode</th>
+                                <th>Tanggal</th>
+                                <th>Status</th>
+                                <th>Dibuat Oleh</th>
+                                <th>Tanggal Dibuat</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for o in opnames %}
+                            <tr>
+                                <td><a href="{% url 'stock_opname:opname_detail' o.pk %}" class="fw-semibold text-decoration-none">{{ o.document_number }}</a></td>
+                                <td><span class="badge bg-info text-dark">{{ o.get_period_type_display }}</span></td>
+                                <td>{{ o.period_start|date:'d/m/Y' }} — {{ o.period_end|date:'d/m/Y' }}</td>
+                                <td>
+                                    {% if o.status == 'DRAFT' %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                    {% elif o.status == 'IN_PROGRESS' %}
+                                    <span class="badge bg-warning text-dark">Sedang Berjalan</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Selesai</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ o.created_by.full_name|default:o.created_by.username }}</td>
+                                <td>{{ o.created_at|date:'d/m/Y H:i' }}</td>
+                                <td class="text-center">
+                                    {% if o.status != 'COMPLETED' %}
+                                    <a href="{% url 'stock_opname:opname_delete' o.pk %}" class="btn btn-outline-danger btn-sm" title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    <p>Belum ada data stock opname</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if opnames.has_other_pages %}
+                <nav>
+                    <ul class="pagination pagination-sm justify-content-center">
+                        {% if opnames.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ opnames.previous_page_number }}">&laquo;</a></li>
+                        {% endif %}
+                        {% for num in opnames.paginator.page_range %}
+                        <li class="page-item {% if opnames.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        {% if opnames.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ opnames.next_page_number }}">&raquo;</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

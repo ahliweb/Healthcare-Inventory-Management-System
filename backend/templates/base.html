@@ -75,6 +75,11 @@
                     data-label="Kartu Stok">
                     <i class="bi bi-journal-text"></i><span>Kartu Stok</span>
                 </a>
+                <a href="{% url 'stock_opname:opname_list' %}"
+                    class="sidebar-link {% if request.resolver_match.app_name == 'stock_opname' %}active{% endif %}"
+                    data-label="Stock Opname">
+                    <i class="bi bi-clipboard-check"></i><span>Stock Opname</span>
+                </a>
 
                 <div class="sidebar-section-title">Laporan</div>
                 <a href="{% url 'reports:index' %}"

@@ -36,6 +36,7 @@ urlpatterns = [
     path('recall/', include('apps.recall.urls')),
     path('expired/', include('apps.expired.urls')),
     path('reports/', include('apps.reports.urls')),
+    path('stock-opname/', include('apps.stock_opname.urls')),
 ]
 
 if settings.DEBUG:
