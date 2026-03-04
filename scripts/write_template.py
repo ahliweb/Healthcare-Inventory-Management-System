@@ -1,4 +1,6 @@
-{% extends 'base.html' %}
+import os
+
+template = r'''{% extends 'base.html' %}
 
 {% block title %}Detail Stock Opname {{ opname.document_number }} - Healthcare IMS{% endblock %}
 {% block page_title %}Detail Stock Opname{% endblock %}
@@ -165,3 +167,9 @@
     </div>
 </div>
 {% endblock %}
+'''
+
+target = r'd:\projects\DJANGO-IMS\backend\templates\stock_opname\opname_detail.html'
+with open(target, 'w', encoding='utf-8', newline='\n') as f:
+    f.write(template)
+print('Written successfully, length:', len(template))

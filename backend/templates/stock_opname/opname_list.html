@@ -24,7 +24,7 @@
                         <select name="status" class="form-select form-select-sm">
                             <option value="">Semua Status</option>
                             {% for val, label in status_choices %}
-                            <option value="{{ val }}" {% if selected_status==val %}selected{% endif %}>{{ label }}
+                            <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}
                             </option>
                             {% endfor %}
                         </select>
@@ -33,7 +33,7 @@
                         <select name="period" class="form-select form-select-sm">
                             <option value="">Semua Periode</option>
                             {% for val, label in period_choices %}
-                            <option value="{{ val }}" {% if selected_period==val %}selected{% endif %}>{{ label }}
+                            <option value="{{ val }}" {% if selected_period == val %}selected{% endif %}>{{ label }}
                             </option>
                             {% endfor %}
                         </select>
