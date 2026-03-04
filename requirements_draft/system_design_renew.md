@@ -350,7 +350,7 @@ tablib==3.9.0
 ### Security & Authentication
 
 - **Brute-Force Protection:** `django-axes` — locks account after 5 failed attempts for 30 minutes
-- **RBAC:** Custom `@role_required` decorator in `apps.core.decorators` — restricts views by role
+- **RBAC:** `@perm_required` decorator in `apps.core.decorators` — uses Django groups/permissions (managed via Admin). The old `@role_required` is deprecated.
 - **Session Security:** 1-hour sliding expiry, browser-close logout, HttpOnly + SameSite cookies
 - **CSRF:** HttpOnly + SameSite cookies
 - **Password Policy:** Min 10 chars, CommonPasswordValidator, NumericPasswordValidator
@@ -377,6 +377,8 @@ tablib==3.9.0
 - [x] Recall module (list, create, edit, detail, submit, verify, complete)
 - [x] Expired module (list, create, edit, detail, submit, verify, dispose)
 - [x] Stock mutation + transaction posting for Recall and Expired on verify
+- [x] Stock Opname module (create, start, input counts, complete, print discrepancy report, delete)
+- [x] Permission-based access control (`@perm_required` decorator via Django groups)
 
 ### Alerts & Notifications
 
@@ -523,13 +525,13 @@ python manage.py createsuperuser
 | Supplier/Vendor Management | ✅ Track beyond eKatalog |
 | Puskesmas/Facility Master | ✅ 20+ facilities, access via API |
 | Expiry Alert Threshold | ✅ First day of expiry month = expired |
-| Stock Opname | ✅ Monthly |
+| Stock Opname | ✅ Full module: period-based counting, category filter, staff assignment, discrepancy reports |
 | Controlled Substances | ✅ No special tracking (external ministry app) |
 | Offline Access | ✅ Not needed (infra network) |
 | OCR Feature | ✅ For Special Request proof documents |
 | Frontend Approach | ✅ Django Templates + Bootstrap5 for now; React planned |
 | CSV Import Method | ✅ `django-import-export` via Django Admin |
-| Security/Auth | ✅ django-axes + session hardening + RBAC decorator + password policy |
+| Security/Auth | ✅ django-axes + session hardening + `@perm_required` decorator + password policy |
 | Recall/Expired | ✅ Full CRUD with stock mutation on verify |
 
 ---
@@ -544,10 +546,10 @@ python manage.py createsuperuser
 6. ✅ Django models + migrations
 7. ✅ Django Admin customization (with `django-import-export`)
 8. ✅ Seed data CSV templates created
-9. ✅ Django template-based UI (dashboard, items, stock, receiving, distribution, recall, expired)
+9. ✅ Django template-based UI (dashboard, items, stock, receiving, distribution, recall, expired, stock opname)
 10. ⬜ Reports module implementation (currently placeholder)
 11. ⬜ Celery tasks for expiry/low-stock alerts
-12. ✅ Role-based permission enforcement (`@role_required` decorator)
+12. ✅ Permission-based access control (`@perm_required` decorator via Django groups)
 13. ⬜ Receiving verification workflow (status transitions + stock creation)
 14. ⬜ Distribution workflow (FEFO batch selection, stock reservation)
 15. ✅ Recall workflow (status transitions + stock deduction + transaction posting)

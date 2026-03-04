@@ -307,6 +307,41 @@ erDiagram
     Expired ||--o{ ExpiredItem : "contains"
     ExpiredItem ||--|| Item : "disposes"
     ExpiredItem ||--|| Stock : "from_batch"
+
+    %% Stock Opname Module
+    StockOpname {
+        int id PK
+        string document_number UK "SO-YYYYMM-XXXXX"
+        string period_type "MONTHLY, QUARTERLY, SEMESTER, YEARLY"
+        date period_start
+        date period_end
+        string status "Draft, In Progress, Completed"
+        text notes NULL
+        int created_by_id FK
+        timestamp completed_at NULL
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    StockOpnameItem {
+        int id PK
+        int stock_opname_id FK
+        int stock_id FK
+        decimal system_quantity "Snapshot at opname start"
+        decimal actual_quantity NULL "Staff-counted value"
+        text notes NULL "Catatan jika ada selisih"
+    }
+
+    %% Stock Opname M2M (represented as relationships)
+    %% categories: M2M to Category
+    %% assigned_to: M2M to User
+
+    %% Stock Opname relationships
+    StockOpname ||--|| User : "created_by"
+    StockOpname }|--|{ Category : "covers_categories"
+    StockOpname }|--o{ User : "assigned_to"
+    StockOpname ||--o{ StockOpnameItem : "contains"
+    StockOpnameItem ||--|| Stock : "counts"
 ```
 
 ## Table Details
@@ -504,6 +539,33 @@ erDiagram
 - **Key Fields:**
   - `stock_id`: Exact expired batch
   - `quantity`: Quantity deducted on verification
+
+---
+
+### Stock Opname Module
+
+#### 20. StockOpname
+
+- **Purpose:** Header document for physical inventory counting sessions
+- **Indexes:**
+  - `document_number` (unique, auto-gen `SO-YYYYMM-XXXXX`)
+  - `(status, period_start)` for workflow queries
+- **Period Types:** MONTHLY, QUARTERLY, SEMESTER, YEARLY
+- **Status Workflow:** Draft → In Progress → Completed
+- **M2M Fields:**
+  - `categories`: Which item categories to count
+  - `assigned_to`: Staff assigned to perform the count
+- **Properties:** `total_items`, `counted_items`, `discrepancy_count`, `progress_percentage`
+
+#### 21. StockOpnameItem
+
+- **Purpose:** Individual count rows — one per stock batch in the opname session
+- **Key Fields:**
+  - `system_quantity`: Snapshot of `Stock.quantity` when opname starts
+  - `actual_quantity`: Staff-counted physical quantity (nullable until counted)
+  - `difference`: `actual_quantity - system_quantity` (computed property)
+  - `has_discrepancy`: `True` if actual ≠ system
+- **Unique Constraint:** `(stock_opname_id, stock_id)` — one entry per batch per session
 
 ---
 
@@ -727,5 +789,7 @@ for row in csv:
 6. ✅ CSV import via Django Admin (`django-import-export`)
 7. ✅ Recall module implemented (models, views, forms, templates)
 8. ✅ Expired module implemented (models, views, forms, templates)
-9. ⬜ Define DRF serializers (if/when REST API is needed)
-10. ⬜ Build API endpoints (if/when REST API is needed)
+9. ✅ Stock Opname module implemented (models, views, forms, templates)
+10. ✅ Permission-based access control (`@perm_required` decorator)
+11. ⬜ Define DRF serializers (if/when REST API is needed)
+12. ⬜ Build API endpoints (if/when REST API is needed)

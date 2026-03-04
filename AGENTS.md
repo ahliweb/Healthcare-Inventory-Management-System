@@ -23,7 +23,7 @@ A web-based healthcare inventory management system for tracking medicines and me
 
 ## Repository Layout
 
-```
+```text
 DJANGO-IMS/
 ├── AGENTS.md                   # ← You are here
 ├── README.md                   # User-facing readme
@@ -59,50 +59,50 @@ DJANGO-IMS/
 
 All apps live in `backend/apps/`. Each app follows standard Django structure: `models.py`, `views.py`, `urls.py`, `admin.py`, `forms.py`, `tests.py`.
 
-| App              | Path                        | Purpose                                                  |
-| ---------------- | --------------------------- | -------------------------------------------------------- |
-| `core`           | `apps/core/`                | Base/abstract models, dashboard view, shared utilities   |
-| `users`          | `apps/users/`               | Custom `User` model with role field; 5 roles (see below) |
-| `items`          | `apps/items/`               | Item master (medicines, equipment) + lookup tables (Unit, Category, Program, FundingSource, Supplier, Facility) |
-| `stock`          | `apps/stock/`               | `Stock` model (batch/lot tracking, FEFO), `Transaction` audit trail |
-| `receiving`      | `apps/receiving/`           | Incoming stock (procurement & grants), Draft → Submitted → Verified workflow |
-| `distribution`   | `apps/distribution/`        | Outgoing stock to Puskesmas/facilities, multi-step workflow |
-| `recall`         | `apps/recall/`              | Supplier returns, Draft → Submitted → Verified → Completed |
-| `expired`        | `apps/expired/`             | Expired item disposal, Draft → Submitted → Verified → Disposed |
-| `stock_opname`   | `apps/stock_opname/`        | Physical inventory counting, discrepancy reports         |
-| `reports`        | `apps/reports/`             | Reporting module (in progress)                           |
+| App | Path | Purpose |
+| --- | --- | --- |
+| `core` | `apps/core/` | Base/abstract models, dashboard view, shared utilities |
+| `users` | `apps/users/` | Custom `User` model with role field; 5 roles (see below) |
+| `items` | `apps/items/` | Item master (medicines, equipment) + lookup tables (Unit, Category, Program, FundingSource, Supplier, Facility) |
+| `stock` | `apps/stock/` | `Stock` model (batch/lot tracking, FEFO), `Transaction` audit trail |
+| `receiving` | `apps/receiving/` | Incoming stock (procurement & grants), Draft → Submitted → Verified workflow |
+| `distribution` | `apps/distribution/` | Outgoing stock to Puskesmas/facilities, multi-step workflow |
+| `recall` | `apps/recall/` | Supplier returns, Draft → Submitted → Verified → Completed |
+| `expired` | `apps/expired/` | Expired item disposal, Draft → Submitted → Verified → Disposed |
+| `stock_opname` | `apps/stock_opname/` | Physical inventory counting, discrepancy reports |
+| `reports` | `apps/reports/` | Reporting module (in progress) |
 
 ## URL Routes
 
 All route prefixes are defined in `backend/config/urls.py`:
 
-| URL Prefix         | App / View             |
-| ------------------- | ---------------------- |
-| `/`                 | Dashboard (`apps.core`) |
-| `/admin/`           | Django Admin            |
-| `/login/`           | Auth login              |
-| `/logout/`          | Auth logout             |
-| `/password/change/` | Password change         |
-| `/items/`           | `apps.items`            |
-| `/stock/`           | `apps.stock`            |
-| `/receiving/`       | `apps.receiving`        |
-| `/distribution/`    | `apps.distribution`     |
-| `/recall/`          | `apps.recall`           |
-| `/expired/`         | `apps.expired`          |
-| `/reports/`         | `apps.reports`          |
-| `/stock-opname/`    | `apps.stock_opname`     |
+| URL Prefix | App / View |
+| --- | --- |
+| `/` | Dashboard (`apps.core`) |
+| `/admin/` | Django Admin |
+| `/login/` | Auth login |
+| `/logout/` | Auth logout |
+| `/password/change/` | Password change |
+| `/items/` | `apps.items` |
+| `/stock/` | `apps.stock` |
+| `/receiving/` | `apps.receiving` |
+| `/distribution/` | `apps.distribution` |
+| `/recall/` | `apps.recall` |
+| `/expired/` | `apps.expired` |
+| `/reports/` | `apps.reports` |
+| `/stock-opname/` | `apps.stock_opname` |
 
 ## User Roles
 
-The system uses a custom `@role_required` decorator for RBAC. Five roles:
+The system uses `@perm_required` decorator for permission-based access control via Django groups (managed in Admin). Five roles:
 
-| Role                 | Access Scope                             |
-| -------------------- | ---------------------------------------- |
-| **Admin**            | Full system access + user management     |
-| **Kepala Instalasi** | Approvals, all reports, dashboard        |
-| **Admin Umum**       | Receiving, distribution, basic reports   |
-| **Petugas Gudang**   | Stock operations, receiving verification |
-| **Auditor**          | Financial reports, stock valuation, audit |
+| Role | Access Scope |
+| --- | --- |
+| **Admin** | Full system access + user management |
+| **Kepala Instalasi** | Approvals, all reports, dashboard |
+| **Admin Umum** | Receiving, distribution, basic reports |
+| **Petugas Gudang** | Stock operations, receiving verification |
+| **Auditor** | Financial reports, stock valuation, audit |
 
 ## Key Architectural Patterns
 
@@ -135,7 +135,7 @@ Powered by `django-import-export`. Admin classes use `ImportExportModelAdmin` fo
 
 ### Required Environment Variables (`.env`)
 
-```
+```text
 DJANGO_SECRET_KEY=<generate-with-django-utility>
 DB_NAME=healthcare_ims
 DB_USER=postgres
@@ -184,7 +184,7 @@ The script auto-activates the virtualenv, sets cwd to `backend/`, and checks for
 ## Coding Conventions
 
 - **App structure:** Follow existing patterns — each app has `models.py`, `views.py`, `urls.py`, `admin.py`, `forms.py`
-- **Views:** Function-based views with `@login_required` and `@role_required` decorators
+- **Views:** Function-based views with `@login_required` and `@perm_required` decorators
 - **Forms:** Use `crispy_forms` with `bootstrap5` template pack
 - **Models:** Use `BigAutoField` as default PK; put shared/abstract models in `apps.core`
 - **Templates:** Place in `templates/<app_name>/`; extend `base.html`
@@ -193,11 +193,11 @@ The script auto-activates the virtualenv, sets cwd to `backend/`, and checks for
 
 ## Documentation
 
-| Document                                                  | Purpose                      |
-| --------------------------------------------------------- | ---------------------------- |
-| [`README.md`](README.md)                                  | User-facing project overview |
-| [`requirements_draft/system_design_renew.md`](requirements_draft/system_design_renew.md) | Full system design           |
-| [`requirements_draft/erd.md`](requirements_draft/erd.md)  | Entity Relationship Diagram  |
-| [`requirements_draft/infrastructure_plan.md`](requirements_draft/infrastructure_plan.md) | Deployment architecture      |
-| [`backend/seed/README.md`](backend/seed/README.md)        | Seed data column specs       |
-| [`security-audit/`](security-audit/)                      | OWASP Top 10 audit report    |
+| Document | Purpose |
+| --- | --- |
+| [`README.md`](README.md) | User-facing project overview |
+| [`requirements_draft/system_design_renew.md`](requirements_draft/system_design_renew.md) | Full system design |
+| [`requirements_draft/erd.md`](requirements_draft/erd.md) | Entity Relationship Diagram |
+| [`requirements_draft/infrastructure_plan.md`](requirements_draft/infrastructure_plan.md) | Deployment architecture |
+| [`backend/seed/README.md`](backend/seed/README.md) | Seed data column specs |
+| [`security-audit/`](security-audit/) | OWASP Top 10 audit report |

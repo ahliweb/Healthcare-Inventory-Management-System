@@ -15,7 +15,8 @@ A web-based inventory management system for managing medicine and medical equipm
 - **Audit Trail** — Immutable transaction log for all stock movements
 - **CSV Import/Export** — Bulk data operations via Django Admin (`django-import-export`)
 - **Dashboard** — Overview of stock levels, near-expiry items, and recent transactions
-- **Role-Based Access Control** — `@role_required` decorator with 5 user roles
+- **Stock Opname** — Physical inventory counting with category-based filtering, staff assignment, and printable discrepancy reports
+- **Role-Based Access Control** — `@perm_required` decorator with Django groups/permissions (managed via Admin)
 - **Security Hardening** — Brute-force protection (django-axes), session security, production HSTS
 
 ## 🛠️ Tech Stack
@@ -149,13 +150,13 @@ DJANGO-IMS/
 
 ## 👥 User Roles
 
-| Role                 | Description                              |
-| -------------------- | ---------------------------------------- |
-| **Admin**            | Full system access + user management     |
-| **Kepala Instalasi** | Approvals, all reports, dashboard        |
-| **Admin Umum**       | Receiving, distribution, basic reports   |
-| **Petugas Gudang**   | Stock operations, receiving verification |
-| **Auditor**          | Financial reports, stock valuation, audit |
+| Role | Description |
+| --- | --- |
+| **Admin** | Full system access + user management |
+| **Kepala Instalasi** | Approvals, all reports, dashboard |
+| **Admin Umum** | Receiving, distribution, basic reports |
+| **Petugas Gudang** | Stock operations, receiving verification |
+| **Auditor** | Financial reports, stock valuation, audit |
 
 ## 🔄 Workflow Snapshot
 
@@ -163,6 +164,7 @@ DJANGO-IMS/
 - **Distribution:** Draft/Submitted → Verified → Prepared → Distributed (`Transaction(OUT)` on distribution)
 - **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)` on verify)
 - **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)` on verify)
+- **Stock Opname:** Draft → In Progress (snapshots stock) → Completed (printable discrepancy report)
 
 ## 📖 Documentation
 

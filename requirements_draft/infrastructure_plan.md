@@ -90,7 +90,7 @@ Currently only infrastructure services are containerized:
 ### 4. Application Security (Implemented)
 
 - **Brute-Force Protection**: `django-axes` — locks account after 5 failed login attempts for 30 minutes
-- **RBAC**: Custom `@role_required` decorator restricts views by user role (5 roles)
+- **RBAC**: `@perm_required` decorator uses Django groups/permissions (managed via Admin panel)
 - **Session Security**: 1-hour sliding expiry, browser-close logout, HttpOnly + SameSite cookies
 - **CSRF Protection**: HttpOnly + SameSite cookies
 - **Password Policy**: Minimum 10 characters, common password validation, numeric-only validation
