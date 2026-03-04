@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSidebarCollapse();
     initAlertDismiss();
     initDeleteConfirmation();
+    initRowKeyboardFocus();
 });
 
 /** Sidebar toggle for mobile */
@@ -29,6 +30,19 @@ function initSidebar() {
     if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
+}
+
+/** Enable keyboard focus on table rows for quicker navigation */
+function initRowKeyboardFocus() {
+    document.querySelectorAll('.table tbody tr').forEach((tr) => {
+        tr.setAttribute('tabindex', '0');
+        tr.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const link = tr.querySelector('a');
+                if (link) link.click();
+            }
+        });
+    });
 }
 
 /** Sidebar collapse toggle for desktop */

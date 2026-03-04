@@ -26,11 +26,19 @@
                 <option value="PROCUREMENT" {{ type_procurement }}>Pengadaan</option>
                 <option value="GRANT" {{ type_grant }}>Hibah</option>
             </select>
-            <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
-            {% if search or selected_status or selected_type %}
-            <a href="{% url 'receiving:receiving_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
-            {% endif %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
+                {% if search or selected_status or selected_type %}
+                <a href="{% url 'receiving:receiving_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
         </form>
+        <div class="mt-2 status-legend">
+            <span class="label">Status:</span>
+            <span class="badge-status badge-draft">Draft</span>
+            <span class="badge-status badge-submitted">Submitted</span>
+            <span class="badge-status badge-verified">Verified</span>
+        </div>
     </div>
 
     <div class="table-responsive">

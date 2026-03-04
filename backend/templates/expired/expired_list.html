@@ -22,11 +22,20 @@
                 <option value="VERIFIED" {{ status_verified }}>Terverifikasi</option>
                 <option value="DISPOSED" {{ status_disposed }}>Dimusnahkan</option>
             </select>
-            <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
-            {% if search or selected_status %}
-            <a href="{% url 'expired:expired_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
-            {% endif %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
+                {% if search or selected_status %}
+                <a href="{% url 'expired:expired_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
         </form>
+        <div class="mt-2 status-legend">
+            <span class="label">Status:</span>
+            <span class="badge-status badge-draft">Draft</span>
+            <span class="badge-status badge-submitted">Diajukan</span>
+            <span class="badge-status badge-verified">Terverifikasi</span>
+            <span class="badge-status badge-disposed">Dimusnahkan</span>
+        </div>
     </div>
 
     <div class="table-responsive">
