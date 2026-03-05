@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Tutup Sisa {{ receiving.document_number }} — Healthcare IMS{% endblock %}
+{% block page_title %}Tutup Sisa Rencana{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card content-card">
+            <div class="card-header">
+                <span><i class="bi bi-x-circle me-2"></i>Tutup Sisa Rencana</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 small text-muted">
+                    No. Dokumen: <strong>{{ receiving.document_number }}</strong>
+                </div>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ formset.management_form }}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Barang</th>
+                                    <th class="text-end">Rencana</th>
+                                    <th class="text-end">Diterima</th>
+                                    <th class="text-end">Sisa</th>
+                                    <th style="width:220px;">Alasan Pembatalan</th>
+                                    <th style="width:90px;">Batalkan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item_form in formset %}
+                                <tr>
+                                    <td>{{ item_form.instance.item }}</td>
+                                    <td class="text-end">{{ item_form.instance.planned_quantity }}</td>
+                                    <td class="text-end">{{ item_form.instance.received_quantity }}</td>
+                                    <td class="text-end fw-semibold">{{ item_form.instance.remaining_quantity }}</td>
+                                    <td>{{ item_form.cancel_reason }}</td>
+                                    <td class="text-center">{{ item_form.is_cancelled }}</td>
+                                    {{ item_form.id }}
+                                </tr>
+                                {% for error in item_form.errors.values %}
+                                <tr>
+                                    <td colspan="6" class="text-danger small py-1">{{ error }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-check-lg me-1"></i>Tutup Sisa
+                        </button>
+                        <a href="{% url 'receiving:receiving_plan_detail' receiving.pk %}" class="btn btn-outline-secondary">Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

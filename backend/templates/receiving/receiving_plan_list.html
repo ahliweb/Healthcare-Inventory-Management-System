@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Penerimaan Barang - Healthcare IMS{% endblock %}
-{% block page_title %}Penerimaan Barang{% endblock %}
+{% block title %}Rencana Penerimaan - Healthcare IMS{% endblock %}
+{% block page_title %}Rencana Penerimaan{% endblock %}
 
 {% block content %}
 <div class="table-container">
     <div class="table-header">
         <div class="d-flex flex-wrap gap-2 align-items-center">
-            <h5 class="mb-0"><i class="bi bi-inbox-fill me-2"></i>Daftar Penerimaan</h5>
-            <a href="{% url 'receiving:receiving_plan_list' %}" class="btn btn-outline-secondary btn-sm">Rencana Penerimaan</a>
+            <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Daftar Rencana Penerimaan</h5>
+            <a href="{% url 'receiving:receiving_list' %}" class="btn btn-outline-secondary btn-sm">Penerimaan</a>
         </div>
-        <a href="{% url 'receiving:receiving_create' %}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Buat Penerimaan
+        <a href="{% url 'receiving:receiving_plan_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Buat Rencana
         </a>
     </div>
 
@@ -21,8 +21,11 @@
             <select name="status" class="form-select">
                 <option value="">Semua Status</option>
                 <option value="DRAFT" {{ status_draft }}>Draft</option>
-                <option value="SUBMITTED" {{ status_submitted }}>Submitted</option>
-                <option value="VERIFIED" {{ status_verified }}>Verified</option>
+                <option value="SUBMITTED" {{ status_submitted }}>Diajukan</option>
+                <option value="APPROVED" {{ status_approved }}>Disetujui</option>
+                <option value="PARTIAL" {{ status_partial }}>Diterima Sebagian</option>
+                <option value="RECEIVED" {{ status_received }}>Diterima Lengkap</option>
+                <option value="CLOSED" {{ status_closed }}>Ditutup</option>
             </select>
             <select name="type" class="form-select">
                 <option value="">Semua Tipe</option>
@@ -32,15 +35,18 @@
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
                 {% if search or selected_status or selected_type %}
-                <a href="{% url 'receiving:receiving_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
+                <a href="{% url 'receiving:receiving_plan_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
                 {% endif %}
             </div>
         </form>
         <div class="mt-2 status-legend">
             <span class="label">Status:</span>
             <span class="badge-status badge-draft">Draft</span>
-            <span class="badge-status badge-submitted">Submitted</span>
-            <span class="badge-status badge-verified">Verified</span>
+            <span class="badge-status badge-submitted">Diajukan</span>
+            <span class="badge-status badge-approved">Disetujui</span>
+            <span class="badge-status badge-partial">Parsial</span>
+            <span class="badge-status badge-received">Lengkap</span>
+            <span class="badge-status badge-closed">Ditutup</span>
         </div>
     </div>
 
@@ -61,15 +67,9 @@
             <tbody>
                 {% for r in receivings %}
                 <tr>
-                    <td><a href="{% url 'receiving:receiving_detail' r.pk %}" class="fw-semibold text-decoration-none">{{ r.document_number }}</a></td>
+                    <td><a href="{% url 'receiving:receiving_plan_detail' r.pk %}" class="fw-semibold text-decoration-none">{{ r.document_number }}</a></td>
                     <td>{{ r.receiving_date|date:"d/m/Y" }}</td>
-                    <td>
-                        {% if r.receiving_type == 'PROCUREMENT' %}
-                        <span class="badge bg-primary-subtle text-primary">Pengadaan</span>
-                        {% else %}
-                        <span class="badge bg-success-subtle text-success">Hibah</span>
-                        {% endif %}
-                    </td>
+                    <td>{{ r.get_receiving_type_display }}</td>
                     <td>{{ r.supplier.name|default:"-" }}</td>
                     <td>{{ r.sumber_dana.code }}</td>
                     <td>
@@ -77,7 +77,7 @@
                     </td>
                     <td>{{ r.created_by }}</td>
                     <td class="text-end">
-                        <a href="{% url 'receiving:receiving_detail' r.pk %}" class="btn btn-sm btn-outline-secondary">
+                        <a href="{% url 'receiving:receiving_plan_detail' r.pk %}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-eye"></i>
                         </a>
                     </td>
@@ -86,8 +86,8 @@
                 <tr>
                     <td colspan="8">
                         <div class="empty-state">
-                            <i class="bi bi-inbox d-block"></i>
-                            <p>Belum ada data penerimaan</p>
+                            <i class="bi bi-clipboard-check d-block"></i>
+                            <p>Belum ada rencana penerimaan</p>
                         </div>
                     </td>
                 </tr>
