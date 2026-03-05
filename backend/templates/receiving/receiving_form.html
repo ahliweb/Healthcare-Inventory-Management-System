@@ -38,7 +38,18 @@
                     <hr>
                     <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-1"></i>Item Penerimaan</h6>
                     {{ formset.management_form }}
-                    <div class="table-responsive">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small">Tambah baris untuk menambah item penerimaan.</span>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-danger btn-sm formset-clear" data-formset-target="receiving-items">
+                                <i class="bi bi-trash me-1"></i>Hapus Semua
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm formset-add" data-formset-target="receiving-items">
+                                <i class="bi bi-plus-lg me-1"></i>Tambah Baris
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" data-formset="receiving-items" data-formset-prefix="{{ formset.prefix }}">
                         <table class="table table-sm" id="itemTable">
                             <thead>
                                 <tr>
@@ -59,9 +70,10 @@
                                     <td>{{ item_form.expiry_date }}</td>
                                     <td>{{ item_form.unit_price }}</td>
                                     <td class="text-center">
-                                        {% if item_form.instance.pk %}
-                                            {{ item_form.DELETE }}
-                                        {% endif %}
+                                        <button type="button" class="btn btn-outline-danger btn-sm formset-remove" title="Hapus Baris">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <div class="d-none">{{ item_form.DELETE }}</div>
                                     </td>
                                     {{ item_form.id }}
                                     {% for error in item_form.errors.values %}
@@ -72,6 +84,22 @@
                             </tbody>
                         </table>
                     </div>
+                    <template id="receiving-items-empty">
+                        <tr class="formset-row">
+                            <td>{{ formset.empty_form.item }}</td>
+                            <td>{{ formset.empty_form.quantity }}</td>
+                            <td>{{ formset.empty_form.batch_lot }}</td>
+                            <td>{{ formset.empty_form.expiry_date }}</td>
+                            <td>{{ formset.empty_form.unit_price }}</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-outline-danger btn-sm formset-remove" title="Hapus Baris">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <div class="d-none">{{ formset.empty_form.DELETE }}</div>
+                            </td>
+                            {{ formset.empty_form.id }}
+                        </tr>
+                    </template>
 
                     <div class="d-flex gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">

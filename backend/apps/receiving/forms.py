@@ -54,7 +54,9 @@ class ReceivingItemForm(forms.ModelForm):
         model = ReceivingItem
         fields = ["item", "quantity", "batch_lot", "expiry_date", "unit_price"]
         widgets = {
-            "item": forms.Select(attrs={"class": "form-select form-select-sm"}),
+            "item": forms.Select(
+                attrs={"class": "form-select form-select-sm js-typeahead-select"}
+            ),
             "quantity": forms.NumberInput(
                 attrs={"class": "form-control form-control-sm", "min": "1"}
             ),
@@ -88,7 +90,9 @@ class ReceivingOrderItemForm(forms.ModelForm):
         model = ReceivingOrderItem
         fields = ["item", "planned_quantity", "unit_price", "notes"]
         widgets = {
-            "item": forms.Select(attrs={"class": "form-select form-select-sm"}),
+            "item": forms.Select(
+                attrs={"class": "form-select form-select-sm js-typeahead-select"}
+            ),
             "planned_quantity": forms.NumberInput(
                 attrs={"class": "form-control form-control-sm", "min": "1"}
             ),
@@ -115,7 +119,9 @@ ReceivingOrderItemFormSet = inlineformset_factory(
 class ReceivingReceiptItemForm(forms.ModelForm):
     order_item = forms.ModelChoiceField(
         queryset=ReceivingOrderItem.objects.none(),
-        widget=forms.Select(attrs={"class": "form-select form-select-sm"}),
+        widget=forms.Select(
+            attrs={"class": "form-select form-select-sm js-typeahead-select"}
+        ),
         required=True,
     )
 

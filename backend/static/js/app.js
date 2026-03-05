@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initAlertDismiss();
     initDeleteConfirmation();
     initRowKeyboardFocus();
+    initTypeaheadSelects();
+    initFormsetControls();
 });
 
 /** Sidebar toggle for mobile */
@@ -41,6 +43,237 @@ function initRowKeyboardFocus() {
                 const link = tr.querySelector('a');
                 if (link) link.click();
             }
+        });
+    });
+}
+
+/** Typeahead select: input + suggestion list, selects option on click */
+function initTypeaheadSelects() {
+    document.querySelectorAll('select.js-typeahead-select').forEach((select) => {
+        if (select.dataset.typeaheadInitialized === 'true') return;
+        select.dataset.typeaheadInitialized = 'true';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'typeahead-select';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control form-control-sm typeahead-input';
+        input.placeholder = select.getAttribute('data-search-placeholder') || 'Cari barang...';
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('aria-label', 'Cari barang');
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'typeahead-dropdown';
+        dropdown.setAttribute('role', 'listbox');
+        dropdown.setAttribute('aria-label', 'Hasil pencarian');
+
+        const optionsSnapshot = Array.from(select.options).map((opt) => ({
+            value: opt.value,
+            text: opt.text,
+            disabled: opt.disabled,
+        }));
+
+        const parent = select.parentNode;
+        parent.insertBefore(wrapper, select);
+        wrapper.appendChild(input);
+        wrapper.appendChild(dropdown);
+        wrapper.appendChild(select);
+
+        select.style.display = 'none';
+
+        const renderOptions = (query) => {
+            const q = (query || '').trim().toLowerCase();
+            dropdown.innerHTML = '';
+            if (!q) {
+                dropdown.classList.remove('show');
+                return;
+            }
+
+            const matches = optionsSnapshot.filter((opt) => {
+                if (opt.value === '') return false;
+                return opt.text.toLowerCase().includes(q);
+            });
+
+            if (matches.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'typeahead-item empty';
+                empty.textContent = 'Tidak ada hasil';
+                dropdown.appendChild(empty);
+                dropdown.classList.add('show');
+                return;
+            }
+
+            matches.slice(0, 10).forEach((opt, index) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'typeahead-item';
+                item.textContent = opt.text;
+                item.setAttribute('role', 'option');
+                item.dataset.value = opt.value;
+                item.dataset.index = String(index);
+                item.disabled = opt.disabled;
+                item.addEventListener('click', () => {
+                    select.value = opt.value;
+                    input.value = opt.text;
+                    dropdown.classList.remove('show');
+                });
+                dropdown.appendChild(item);
+            });
+
+            dropdown.classList.add('show');
+        };
+
+        const setActiveIndex = (idx) => {
+            const items = Array.from(dropdown.querySelectorAll('.typeahead-item:not(.empty)'));
+            items.forEach((el, i) => {
+                el.classList.toggle('active', i === idx);
+                if (i === idx) {
+                    el.scrollIntoView({ block: 'nearest' });
+                }
+            });
+            dropdown.dataset.activeIndex = String(idx);
+        };
+
+        const moveActive = (delta) => {
+            const items = Array.from(dropdown.querySelectorAll('.typeahead-item:not(.empty)'));
+            if (items.length === 0) return;
+            const current = parseInt(dropdown.dataset.activeIndex || '-1', 10);
+            let next = current + delta;
+            if (next < 0) next = items.length - 1;
+            if (next >= items.length) next = 0;
+            setActiveIndex(next);
+        };
+
+        const chooseActive = () => {
+            const items = Array.from(dropdown.querySelectorAll('.typeahead-item:not(.empty)'));
+            if (items.length === 0) return;
+            const current = parseInt(dropdown.dataset.activeIndex || '0', 10);
+            const active = items[current] || items[0];
+            active.click();
+        };
+
+        input.addEventListener('input', () => {
+            renderOptions(input.value);
+            setActiveIndex(0);
+        });
+        input.addEventListener('focus', () => {
+            renderOptions(input.value);
+            setActiveIndex(0);
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                moveActive(1);
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                moveActive(-1);
+                return;
+            }
+            if (e.key === 'Enter') {
+                if (dropdown.classList.contains('show')) {
+                    e.preventDefault();
+                    chooseActive();
+                }
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!wrapper.contains(e.target)) dropdown.classList.remove('show');
+        });
+
+        // If select changes programmatically, reflect in input
+        select.addEventListener('change', () => {
+            const selected = optionsSnapshot.find((opt) => opt.value === select.value);
+            input.value = selected ? selected.text : '';
+        });
+    });
+}
+
+/** Add/remove rows for Django formsets */
+function initFormsetControls() {
+    document.querySelectorAll('[data-formset]').forEach((container) => {
+        const prefix = container.getAttribute('data-formset-prefix');
+        const totalInput = document.querySelector(`input[name="${prefix}-TOTAL_FORMS"]`);
+        const emptyTemplate = document.getElementById(`${container.dataset.formset}-empty`);
+        if (!prefix || !totalInput || !emptyTemplate) return;
+
+        const tableBody = container.querySelector('tbody');
+        if (!tableBody) return;
+
+        const addButtons = document.querySelectorAll(`.formset-add[data-formset-target="${container.dataset.formset}"]`);
+        addButtons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(totalInput.value, 10);
+                const html = emptyTemplate.innerHTML.replace(/__prefix__/g, String(index));
+                const wrapper = document.createElement('tbody');
+                wrapper.innerHTML = html.trim();
+                const row = wrapper.querySelector('tr');
+                if (!row) return;
+                tableBody.appendChild(row);
+                totalInput.value = index + 1;
+                initTypeaheadSelects();
+            });
+        });
+
+        tableBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.formset-remove');
+            if (!btn) return;
+            const row = btn.closest('tr');
+            if (!row) return;
+            const visibleRows = Array.from(tableBody.querySelectorAll('tr.formset-row')).filter(
+                (r) => !r.classList.contains('d-none')
+            );
+            if (visibleRows.length <= 1) {
+                return;
+            }
+            const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleteInput) {
+                deleteInput.checked = true;
+                row.classList.add('d-none');
+            } else {
+                row.remove();
+                const forms = tableBody.querySelectorAll('tr.formset-row');
+                totalInput.value = forms.length;
+            }
+        });
+
+        const clearButtons = document.querySelectorAll(`.formset-clear[data-formset-target="${container.dataset.formset}"]`);
+        clearButtons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const rows = Array.from(tableBody.querySelectorAll('tr.formset-row'));
+                if (rows.length === 0) return;
+                rows.forEach((row, index) => {
+                    if (index === 0) {
+                        const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                        if (deleteInput) deleteInput.checked = false;
+                        row.classList.remove('d-none');
+                        row.querySelectorAll('input, select, textarea').forEach((field) => {
+                            if (field.type === 'checkbox' || field.type === 'radio') {
+                                field.checked = false;
+                            } else {
+                                field.value = '';
+                            }
+                        });
+                    } else {
+                        const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                        if (deleteInput) {
+                            deleteInput.checked = true;
+                            row.classList.add('d-none');
+                        } else {
+                            row.remove();
+                        }
+                    }
+                });
+                const remaining = tableBody.querySelectorAll('tr.formset-row').length;
+                totalInput.value = remaining;
+            });
         });
     });
 }

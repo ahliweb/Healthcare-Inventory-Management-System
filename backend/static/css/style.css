@@ -502,6 +502,63 @@ body {
     padding: 8px 14px;
 }
 
+.typeahead-select {
+    position: relative;
+    display: block;
+}
+
+.typeahead-input {
+    padding: 6px 10px;
+}
+
+.typeahead-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+    z-index: 20;
+    max-height: 260px;
+    overflow-y: auto;
+    display: none;
+}
+
+.typeahead-dropdown.show {
+    display: block;
+}
+
+.typeahead-item {
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: #1f2937;
+    font-size: 0.85rem;
+}
+
+.typeahead-item:hover,
+.typeahead-item:focus {
+    background: #f1f5f9;
+}
+
+.typeahead-item.active {
+    background: #e8efff;
+    color: #1d4ed8;
+}
+
+.formset-row.d-none {
+    display: none;
+}
+
+.typeahead-item.empty {
+    color: #94a3b8;
+    cursor: default;
+}
+
 .form-control:focus, .form-select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.15);
