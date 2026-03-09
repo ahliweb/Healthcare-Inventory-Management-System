@@ -66,12 +66,12 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 | satuan | ✅ Yes | Unit **code** (e.g. `TAB`) |
 | kategori | ✅ Yes | Category **code** (e.g. `TABLET`) |
 | is_program_item | ❌ No | `1` for program items, default `0` |
-| program | ❌ No | Program **code** (e.g. TB, HIV) from programs table |
+| program | ❌ No | Program **code** (e.g. TB, HIV) from programs table. If `is_program_item=1` and empty, importer auto-uses/creates `DEFAULT` |
 | minimum_stock | ❌ No | Low stock alert threshold, default `0` |
 | description | ❌ No | |
 | is_active | ❌ No | Default `1` |
 
-### stock.csv
+### stock.csv (reference only)
 
 | Column | Required | Notes |
 | ------ | -------- | ----- |
@@ -84,6 +84,9 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 | unit_price | ❌ No | Default `0` |
 | sumber_dana | ✅ Yes | Funding source **code** |
 
+> [!NOTE]
+> `stock.csv` is kept as a reference format. For initial stock seeding, prefer `receiving.csv` so the system creates proper `Receiving` + `Stock` + `Transaction(IN)` records.
+
 ## Customization Guide
 
 ### For Client: Update These Files
@@ -91,7 +94,7 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 1. **locations.csv** — Replace placeholder locations with actual warehouse layout
 2. **facilities.csv** — Add all Puskesmas and healthcare facilities
 3. **items.csv** — Replace sample data with actual item master
-4. **stock.csv** — Add actual inventory with batch/expiry data
+4. **receiving.csv** — Add initial inventory using receiving documents (recommended for audit trail)
 
 ### Mapping from Legacy Data
 

@@ -114,7 +114,7 @@ Import lookup tables first, then items that reference them:
 | `satuan` | ✅ Yes | — | Unit **code** (e.g. `TAB`) |
 | `kategori` | ✅ Yes | — | Category **code** (e.g. `TABLET`) |
 | `is_program_item` | ❌ No | `0` | `1` for program items |
-| `program` | ❌ No | blank | Program **code** (e.g. `TB`, `HIV`) from programs table |
+| `program` | ❌ No | blank | Program **code** (e.g. `TB`, `HIV`) from programs table. If `is_program_item=1` and this is empty, importer auto-uses/creates `DEFAULT` |
 | `minimum_stock` | ❌ No | `0` | Low stock alert threshold |
 | `description` | ❌ No | blank | |
 | `is_active` | ❌ No | `1` | |

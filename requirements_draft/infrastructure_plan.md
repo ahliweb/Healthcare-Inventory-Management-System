@@ -34,8 +34,8 @@ graph TD
     Client[Client Browser/Mobile] -->|HTTPS| Nginx[Nginx Reverse Proxy]
 
     subgraph Docker Network
-        Nginx -->|/api| API[Django Backend\nGunicorn]
-        Nginx -->|/*| FE[React Frontend\nStatic Files]
+        Nginx -->|/| API[Django Backend\nGunicorn]
+        Nginx -->|/*| FE[React Frontend\nStatic Files (planned)]
 
         API -->|Read/Write| DB[(PostgreSQL 16)]
         API -->|Cache/Queue| Redis[(Redis 7)]
@@ -53,6 +53,9 @@ graph TD
 
 > [!NOTE]
 > The React frontend is **planned but not yet started**. The current UI is built with Django templates + Bootstrap5. When the React frontend is implemented, the architecture will transition to the target diagram above.
+
+> [!NOTE]
+> There is currently no REST API layer. Nginx-to-Django routing in production is expected to proxy standard Django routes first; API-specific routing will be added only if DRF is introduced.
 
 ## Core Components
 

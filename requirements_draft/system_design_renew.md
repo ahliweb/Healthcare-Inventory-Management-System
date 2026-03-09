@@ -157,7 +157,7 @@ flowchart TB
 
 | Field | Type | Notes |
 | ----- | ---- | ----- |
-| Kode Barang | String | Auto-generated or manual |
+| Kode Barang | String | Auto-generated `ITM-YYYY-NNNNN` |
 | Nama Barang | String | |
 | Satuan | ForeignKey(Unit) | Reference to Unit table |
 | Kategori | ForeignKey(Category) | Reference to Category table |
@@ -241,8 +241,6 @@ flowchart TB
 > Special Request currently manual process - no public-facing portal needed yet. OCR feature for proof documents.
 
 ---
-
-### 3.4 📊 Reporting Module
 
 ### 3.4 ♻️ Recall Module (Recall/Retur)
 
@@ -358,6 +356,13 @@ tablib==3.9.0
 - **Production Hardening (DEBUG=False):** HSTS (1 year + preload), SSL redirect, X-Frame-Options DENY, strict referrer policy
 - **Custom User Model:** `apps.users.User` extends AbstractUser with a `role` field (5 roles)
 
+### Current Workflow Notes (Implementation)
+
+- **Receiving (regular):** create/list/detail available for direct receiving documents.
+- **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed.
+- **Receiving stock impact:** `Transaction(IN)` and stock updates are created during planned receipt input.
+- **Distribution:** create/list/detail is active; model statuses exist (`DRAFT`, `SUBMITTED`, `VERIFIED`, `PREPARED`, `DISTRIBUTED`, `REJECTED`).
+
 ### Core Features
 
 - [x] Multi-location stock tracking
@@ -370,6 +375,9 @@ tablib==3.9.0
 - [x] CSV import/export via Django Admin (`django-import-export`)
 - [x] Dashboard with stock overview, near-expiry items, recent transactions
 - [x] Item CRUD (list, create, update, soft delete)
+- [x] Item list filters/search + pagination (25/page)
+- [x] AJAX quick-create lookup endpoints (Unit, Category, Program)
+- [x] Item import defaulting to `DEFAULT` Program when `is_program_item=1` and program is empty
 - [x] Stock list with search and filters
 - [x] Transaction history viewer
 - [x] Receiving module (list, create, detail)
@@ -410,7 +418,7 @@ tablib==3.9.0
 Import initial data via **Django Admin** using `django-import-export`:
 
 - Seed CSV files are in `backend/seed/`
-- Import order: `units` → `categories` → `funding_sources` → `programs` → `locations` → `suppliers` → `facilities` → `items` → `stock`
+- Import order: `units` → `categories` → `funding_sources` → `programs` → `locations` → `suppliers` → `facilities` → `items` → `receiving`
 
 See [README.md](./README.md) and [seed/README.md](../backend/seed/README.md) for detailed import instructions.
 
@@ -550,8 +558,8 @@ python manage.py createsuperuser
 10. ⬜ Reports module implementation (currently placeholder)
 11. ⬜ Celery tasks for expiry/low-stock alerts
 12. ✅ Permission-based access control (`@perm_required` decorator via Django groups)
-13. ⬜ Receiving verification workflow (status transitions + stock creation)
-14. ⬜ Distribution workflow (FEFO batch selection, stock reservation)
+13. ✅ Receiving planned workflow (submit/approve/receive/close) with stock posting on receive
+14. ⬜ Distribution workflow actions (verify/prepare/distribute with stock reservation posting)
 15. ✅ Recall workflow (status transitions + stock deduction + transaction posting)
 16. ✅ Expired workflow (status transitions + stock deduction + transaction posting)
 17. ⬜ Excel/PDF export for reports

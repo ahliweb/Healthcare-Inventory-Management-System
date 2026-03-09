@@ -5,15 +5,19 @@ A web-based inventory management system for managing medicine and medical equipm
 ## ✨ Features
 
 - **Item Master Management** — Full CRUD for medicines & medical equipment with category, unit, and program tracking
+- **Item List Filtering & Pagination** — Search by code/name/program, filter by category/program flag, paginated at 25 rows per page
+- **Quick Lookup Creation** — Create Unit/Category/Program directly from item form via AJAX endpoints
 - **Multi-Location Stock Tracking** — Track inventory across multiple storage locations with batch/lot numbers
 - **FEFO Management** — First Expiry, First Out tracking with expiry date monitoring
 - **Receiving Module** — Record incoming stock from procurement (eKatalog) and grants (Hibah)
-- **Distribution Module** — Handle LPLPO requests, planned allocations, and special requests to Puskesmas/facilities
+- **Receiving Planning Workflow** — Plan receipts with Draft → Submitted → Approved → Partial/Received → Closed flow
+- **Distribution Module** — Create and review LPLPO, allocation, and special request documents to facilities (workflow statuses are model-ready)
 - **Recall Module** — Manage supplier returns with Draft → Submitted → Verified → Completed workflow
 - **Expired Module** — Manage expired/disposal documents with Draft → Submitted → Verified → Disposed workflow
 - **Funding Source Tracking** — Track budget allocation per batch (DAK, DAU, APBD, etc.)
 - **Audit Trail** — Immutable transaction log for all stock movements
 - **CSV Import/Export** — Bulk data operations via Django Admin (`django-import-export`)
+- **Smart Item Import Defaults** — Program items imported without a program are auto-mapped to a `DEFAULT` program
 - **Dashboard** — Overview of stock levels, near-expiry items, and recent transactions
 - **Stock Opname** — Physical inventory counting with category-based filtering, staff assignment, and printable discrepancy reports
 - **Role-Based Access Control** — `@perm_required` decorator with Django groups/permissions (managed via Admin)
@@ -104,6 +108,7 @@ Examples:
 ```powershell
 .\scripts\run-django-test.ps1 -Target apps.recall
 .\scripts\run-django-test.ps1 -Target apps.expired
+.\scripts\run-django-test.ps1 -Target tests.test_item_import
 ```
 
 Notes:
@@ -141,6 +146,7 @@ DJANGO-IMS/
 │   │   ├── recall/             # Return/recall to supplier
 │   │   ├── expired/            # Expired/disposal workflow
 │   │   ├── reports/            # Reporting (in progress)
+│   │   ├── stock_opname/       # Physical count & discrepancy report
 │   │   └── users/              # Custom user model with roles
 │   ├── seed/                   # CSV seed data
 │   ├── templates/              # Django HTML templates
@@ -160,11 +166,18 @@ DJANGO-IMS/
 
 ## 🔄 Workflow Snapshot
 
-- **Receiving:** Draft → Submitted → Verified (verification creates stock + `Transaction(IN)`)
-- **Distribution:** Draft/Submitted → Verified → Prepared → Distributed (`Transaction(OUT)` on distribution)
+- **Receiving (regular):** Create/list/detail for direct receiving documents
+- **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed (`Transaction(IN)` created during receipt input)
+- **Distribution:** Create/list/detail is active; status model supports Draft/Submitted/Verified/Prepared/Distributed/Rejected
 - **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)` on verify)
 - **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)` on verify)
 - **Stock Opname:** Draft → In Progress (snapshots stock) → Completed (printable discrepancy report)
+
+## 🧩 Item Module Notes
+
+- Item code (`kode_barang`) is auto-generated as `ITM-YYYY-NNNNN`; users do not enter it manually.
+- If `is_program_item` is enabled, program selection is required in forms.
+- CSV import safety: for program items with an empty `program` column, importer auto-creates/uses `DEFAULT` program.
 
 ## 📖 Documentation
 

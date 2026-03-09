@@ -148,7 +148,7 @@ erDiagram
         string grant_origin NULL "Province, Ministry, Donation"
         string program NULL "For program items"
         int sumber_dana_id FK
-        string status "Draft, Submitted, Verified"
+        string status "Draft, Submitted, Approved, Partial, Received, Closed, Verified"
         int created_by_id FK
         int verified_by_id FK NULL
         timestamp verified_at NULL
@@ -408,7 +408,7 @@ erDiagram
   - `(kategori_id, is_program_item)` for filtering
   - Full-text search on `nama_barang`
 - **Special Fields:**
-  - `kode_barang`: Auto-generated as `ITM-YYYY-NNNNN` (or manually assigned)
+  - `kode_barang`: Auto-generated as `ITM-YYYY-NNNNN`
   - `is_program_item` + `program` (FK to Program): For designated program items [P]
   - `minimum_stock`: Threshold for low stock alerts
 
@@ -458,7 +458,8 @@ erDiagram
 - **Types:**
   - `PROCUREMENT`: Via eKatalog with supplier
   - `GRANT`: From province/ministry/donations
-- **Status Workflow:** Draft → Submitted → Verified
+- **Status Workflow (planned receiving):** Draft → Submitted → Approved → Partial/Received → Closed
+- **Status Workflow (regular receiving):** direct create/list/detail available
 - **Verification:** Requires `verified_by_id` + `verified_at` timestamp
 
 #### 12. ReceivingItem

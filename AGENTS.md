@@ -110,8 +110,9 @@ The system uses `@perm_required` decorator for permission-based access control v
 
 Most modules follow a status-based workflow with transitions enforced in views:
 
-- **Receiving:** Draft → Submitted → Verified (creates `Stock` + `Transaction(IN)`)
-- **Distribution:** Draft → Submitted → Verified → Prepared → Distributed (`Transaction(OUT)`)
+- **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed (`Transaction(IN)` during receipt input)
+- **Receiving (regular):** create/list/detail available for direct documents
+- **Distribution:** create/list/detail available; model supports Draft → Submitted → Verified → Prepared → Distributed (`Transaction(OUT)` when distributed)
 - **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)`)
 - **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)`)
 
@@ -122,6 +123,15 @@ All stock movements produce immutable `Transaction` records in `apps.stock`. Nev
 ### Auto-generated Document Numbers
 
 Document numbers (e.g., `RCV-YYYY-NNNNN`, `ITM-YYYY-NNNNN`) are auto-generated in models. Do not allow users to set these manually.
+
+### Item Module Behaviors (Latest)
+
+- Item list supports search (`kode_barang`, `nama_barang`, program code/name), category filter, program-item filter, and pagination (25/page).
+- Item module exposes AJAX quick-create endpoints for lookup records:
+  - `POST /items/api/quick-create-unit/`
+  - `POST /items/api/quick-create-category/`
+  - `POST /items/api/quick-create-program/`
+- Item import (`ItemResource.before_import_row`) auto-assigns a `DEFAULT` Program when `is_program_item` is true but `program` is empty.
 
 ### Template Inheritance
 
@@ -169,6 +179,7 @@ Use the provided PowerShell helper script from the repo root:
 .\scripts\run-django-test.ps1 -Target apps.items
 .\scripts\run-django-test.ps1 -Target apps.recall
 .\scripts\run-django-test.ps1 -Target apps.stock_opname
+.\scripts\run-django-test.ps1 -Target tests.test_item_import
 ```
 
 The script auto-activates the virtualenv, sets cwd to `backend/`, and checks for `crispy_forms` before running.
