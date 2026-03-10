@@ -44,6 +44,7 @@ security-audit/
 requirements_draft/*.csv
 .error/
 
+
 # Excel temp files
 ~$*.xlsx
 ~$*.xls

@@ -112,7 +112,7 @@ Most modules follow a status-based workflow with transitions enforced in views:
 
 - **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed (`Transaction(IN)` during receipt input)
 - **Receiving (regular):** create/list/detail available for direct documents
-- **Distribution:** create/list/detail available; model supports Draft → Submitted → Verified → Prepared → Distributed (`Transaction(OUT)` when distributed)
+- **Distribution:** Fully implemented workflow: Draft → Submitted → Verified → Prepared → Distributed (`Transaction(OUT)` when distributed)
 - **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)`)
 - **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)`)
 

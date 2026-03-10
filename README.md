@@ -168,7 +168,7 @@ DJANGO-IMS/
 
 - **Receiving (regular):** Create/list/detail for direct receiving documents
 - **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed (`Transaction(IN)` created during receipt input)
-- **Distribution:** Create/list/detail is active; status model supports Draft/Submitted/Verified/Prepared/Distributed/Rejected
+- **Distribution:** Fully implemented workflow (Draft → Submitted → Verified → Prepared → Distributed) with stock reservation & posting
 - **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)` on verify)
 - **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)` on verify)
 - **Stock Opname:** Draft → In Progress (snapshots stock) → Completed (printable discrepancy report)

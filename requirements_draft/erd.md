@@ -144,6 +144,7 @@ erDiagram
         string receiving_type "PROCUREMENT, GRANT"
         string document_number UK
         date receiving_date
+        boolean is_planned
         int supplier_id FK NULL "For PROCUREMENT"
         string grant_origin NULL "Province, Ministry, Donation"
         string program NULL "For program items"
@@ -152,6 +153,11 @@ erDiagram
         int created_by_id FK
         int verified_by_id FK NULL
         timestamp verified_at NULL
+        int approved_by_id FK NULL
+        timestamp approved_at NULL
+        int closed_by_id FK NULL
+        timestamp closed_at NULL
+        text closed_reason NULL
         text notes NULL
         timestamp created_at
         timestamp updated_at
@@ -160,12 +166,16 @@ erDiagram
     ReceivingItem {
         int id PK
         int receiving_id FK
+        int order_item_id FK NULL
         int item_id FK
         decimal quantity
         string batch_lot
         date expiry_date
         decimal unit_price
         decimal total_price "quantity * unit_price"
+        int location_id FK NULL
+        int received_by_id FK NULL
+        timestamp received_at NULL
         timestamp created_at
     }
     
@@ -177,6 +187,20 @@ erDiagram
         string file_type
         int file_size
         timestamp uploaded_at
+    }
+    
+    ReceivingOrderItem {
+        int id PK
+        int receiving_id FK
+        int item_id FK
+        decimal planned_quantity
+        decimal received_quantity "default 0"
+        decimal unit_price "default 0"
+        text notes NULL
+        boolean is_cancelled "default false"
+        text cancel_reason NULL
+        timestamp created_at
+        timestamp updated_at
     }
     
     %% Distribution Module
@@ -221,6 +245,8 @@ erDiagram
         int created_by_id FK
         int verified_by_id FK NULL
         timestamp verified_at NULL
+        int completed_by_id FK NULL
+        timestamp completed_at NULL
         text notes NULL
         timestamp created_at
         timestamp updated_at
@@ -280,8 +306,13 @@ erDiagram
     Receiving ||--o| Supplier : "from"
     Receiving ||--|| User : "created_by"
     Receiving ||--o| User : "verified_by"
+    Receiving ||--o| User : "approved_by"
+    Receiving ||--o| User : "closed_by"
+    Receiving ||--o{ ReceivingOrderItem : "orders"
     Receiving ||--o{ ReceivingItem : "contains"
     Receiving ||--o{ ReceivingDocument : "has_documents"
+    ReceivingOrderItem ||--|| Item : "orders"
+    ReceivingItem ||--o| ReceivingOrderItem : "fulfills"
     ReceivingItem ||--|| Item : "receives"
     
     %% Distribution relationships
@@ -458,16 +489,19 @@ erDiagram
 - **Types:**
   - `PROCUREMENT`: Via eKatalog with supplier
   - `GRANT`: From province/ministry/donations
-- **Status Workflow (planned receiving):** Draft → Submitted → Approved → Partial/Received → Closed
+- **Key Fields:** `is_planned` to identify planned vs regular receipts
+- **Status Workflow (planned receiving):** Draft → Submitted → Approved → Partial/Received → Closed. Orders tracked via `ReceivingOrderItem`.
 - **Status Workflow (regular receiving):** direct create/list/detail available
-- **Verification:** Requires `verified_by_id` + `verified_at` timestamp
+- **Verification/Approval:** Requires tracking of verified, approved, and closed users/timestamps.
 
 #### 12. ReceivingItem
 
 - **Purpose:** Line items for each receiving document
 - **Key Fields:**
+  - `order_item_id`: Links back to the planned order (if `is_planned` is true)
   - `batch_lot` + `expiry_date`: Recorded at receiving time
   - `unit_price` + `total_price`: Financial tracking
+  - `location_id`: Where the stock is received
 - **Note:** When verified, creates `Stock` entries and `Transaction` records
 
 #### 13. ReceivingDocument
@@ -475,6 +509,14 @@ erDiagram
 - **Purpose:** Store supporting documents (eKatalog files, grant letters)
 - **Storage:** Local filesystem under `/media/receiving/{receiving_id}/`
 - **File Types:** PDF, images, Excel
+
+#### 22. ReceivingOrderItem
+
+- **Purpose:** Planned order line items representing target quantities for planned receiving
+- **Key Fields:**
+  - `planned_quantity`: Target amount to receive
+  - `received_quantity`: Accumulated amount received so far
+  - `remaining_quantity`: Computed property (planned - received)
 
 ---
 
@@ -517,6 +559,7 @@ erDiagram
   - `(status, recall_date)` for workflow queries
 - **Status Workflow:** Draft → Submitted → Verified → Completed
 - **Verification:** Deducts stock and creates `Transaction(type=OUT, reference_type=RECALL)`
+- **Key Fields:** Tracks `verified_by` as well as `completed_by` for full lifecycle tracking.
 
 #### 17. RecallItem
 

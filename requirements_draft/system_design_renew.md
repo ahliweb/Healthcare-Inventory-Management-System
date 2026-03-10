@@ -559,7 +559,7 @@ python manage.py createsuperuser
 11. ⬜ Celery tasks for expiry/low-stock alerts
 12. ✅ Permission-based access control (`@perm_required` decorator via Django groups)
 13. ✅ Receiving planned workflow (submit/approve/receive/close) with stock posting on receive
-14. ⬜ Distribution workflow actions (verify/prepare/distribute with stock reservation posting)
+14. ✅ Distribution workflow actions (verify/prepare/distribute with stock reservation posting)
 15. ✅ Recall workflow (status transitions + stock deduction + transaction posting)
 16. ✅ Expired workflow (status transitions + stock deduction + transaction posting)
 17. ⬜ Excel/PDF export for reports
