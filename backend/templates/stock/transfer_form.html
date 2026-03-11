@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Healthcare IMS{% endblock %}
+{% block page_title %}Mutasi Lokasi{% endblock %}
+
+{% block content %}
+<div class="card content-card table-container form-page-card">
+    <div class="card-header">
+        <span><i class="bi bi-arrow-left-right me-2"></i>{{ title }}</span>
+    </div>
+    <div class="card-body">
+        <form method="post" novalidate id="transferForm" data-stock-search-url="{% url 'stock:api_location_stock_search' %}">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2">
+                {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tanggal Mutasi</label>
+                    {{ form.transfer_date }}
+                    {% for error in form.transfer_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Lokasi Asal</label>
+                    {{ form.source_location }}
+                    {% for error in form.source_location.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Lokasi Tujuan</label>
+                    {{ form.destination_location }}
+                    {% for error in form.destination_location.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Catatan Dokumen</label>
+                {{ form.notes }}
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0"><i class="bi bi-table me-2"></i>Daftar Stok di Lokasi Asal</h6>
+                <div class="d-flex gap-2 align-items-center">
+                    <input type="text" id="locationStockSearch" class="form-control form-control-sm" placeholder="Cari kode / nama / kategori / batch..." style="min-width: 320px;">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="locationStockTable">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Nama Barang</th>
+                            <th>Kategori</th>
+                            <th>Batch/Lot</th>
+                            <th>Expiry</th>
+                            <th class="text-end">Tersedia</th>
+                            <th>Sumber Dana</th>
+                            <th style="width: 160px;">Qty Mutasi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="locationStockTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-3">Pilih lokasi asal untuk menampilkan stok.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Simpan Draft</button>
+                <a href="{% url 'stock:transfer_list' %}" class="btn btn-outline-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

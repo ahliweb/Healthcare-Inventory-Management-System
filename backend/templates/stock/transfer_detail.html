@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Detail Mutasi {{ transfer.document_number }} - Healthcare IMS{% endblock %}
+{% block page_title %}Detail Mutasi Lokasi{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card content-card">
+            <div class="card-header"><span>Info Mutasi</span></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted">No. Dokumen</dt>
+                    <dd class="col-7 fw-semibold">{{ transfer.document_number }}</dd>
+
+                    <dt class="col-5 text-muted">Tanggal</dt>
+                    <dd class="col-7">{{ transfer.transfer_date|date:"d/m/Y" }}</dd>
+
+                    <dt class="col-5 text-muted">Lokasi Asal</dt>
+                    <dd class="col-7">{{ transfer.source_location.name }}</dd>
+
+                    <dt class="col-5 text-muted">Lokasi Tujuan</dt>
+                    <dd class="col-7">{{ transfer.destination_location.name }}</dd>
+
+                    <dt class="col-5 text-muted">Status</dt>
+                    <dd class="col-7">
+                        <span class="badge-status badge-{% if transfer.status == 'COMPLETED' %}verified{% else %}draft{% endif %}">{{ transfer.get_status_display }}</span>
+                    </dd>
+
+                    <dt class="col-5 text-muted">Dibuat Oleh</dt>
+                    <dd class="col-7">{{ transfer.created_by }}</dd>
+
+                    {% if transfer.completed_by %}
+                    <dt class="col-5 text-muted">Diselesaikan</dt>
+                    <dd class="col-7">{{ transfer.completed_by }}<br><small class="text-muted">{{ transfer.completed_at|date:"d/m/Y H:i" }}</small></dd>
+                    {% endif %}
+
+                    {% if transfer.notes %}
+                    <dt class="col-5 text-muted">Catatan</dt>
+                    <dd class="col-7">{{ transfer.notes }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card content-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Daftar Item Mutasi</span>
+                {% if transfer.status == 'DRAFT' %}
+                <form method="post" action="{% url 'stock:transfer_complete' transfer.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-sm" data-confirm="Selesaikan mutasi ini? Stok akan dipindahkan dan tidak bisa dibatalkan.">
+                        <i class="bi bi-check2-circle me-1"></i>Selesaikan Mutasi
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Kode</th>
+                                <th>Nama Barang</th>
+                                <th>Batch/Lot</th>
+                                <th>Expiry</th>
+                                <th class="text-end">Qty Mutasi</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><code>{{ line.item.kode_barang }}</code></td>
+                                <td>{{ line.item.nama_barang }}</td>
+                                <td>{{ line.stock.batch_lot }}</td>
+                                <td>{{ line.stock.expiry_date|date:"d/m/Y" }}</td>
+                                <td class="text-end fw-semibold">{{ line.quantity }}</td>
+                                <td class="text-muted small">{{ line.notes|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state py-4">
+                                        <i class="bi bi-journal-x d-block"></i>
+                                        <p>Belum ada item mutasi.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'stock:transfer_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Kembali
+    </a>
+</div>
+{% endblock %}

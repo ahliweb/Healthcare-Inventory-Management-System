@@ -106,6 +106,11 @@
                     data-label="Log Transaksi">
                     <i class="bi bi-clock-history"></i><span>Log Transaksi</span>
                 </a>
+                <a href="{% url 'stock:transfer_list' %}"
+                    class="sidebar-link {% if request.resolver_match.url_name == 'transfer_list' or request.resolver_match.url_name == 'transfer_create' or request.resolver_match.url_name == 'transfer_detail' %}active{% endif %}"
+                    data-label="Mutasi Lokasi">
+                    <i class="bi bi-arrow-left-right"></i><span>Mutasi Lokasi</span>
+                </a>
                 <a href="{% url 'stock_opname:opname_list' %}"
                     class="sidebar-link {% if request.resolver_match.app_name == 'stock_opname' %}active{% endif %}"
                     data-label="Stock Opname">
@@ -160,6 +165,10 @@
                         {% elif request.resolver_match.app_name == 'receiving' and request.resolver_match.url_name != 'receiving_list' %}
                         <a href="{% url 'receiving:receiving_list' %}" class="btn btn-outline-secondary btn-sm" title="Kembali ke Buat Penerimaan">
                             <i class="bi bi-arrow-left me-1"></i>Buat Penerimaan
+                        </a>
+                        {% elif request.resolver_match.app_name == 'stock' and request.resolver_match.url_name == 'transfer_create' or request.resolver_match.app_name == 'stock' and request.resolver_match.url_name == 'transfer_detail' or request.resolver_match.app_name == 'stock' and request.resolver_match.url_name == 'transfer_complete' %}
+                        <a href="{% url 'stock:transfer_list' %}" class="btn btn-outline-secondary btn-sm" title="Kembali ke Mutasi Lokasi">
+                            <i class="bi bi-arrow-left me-1"></i>Mutasi Lokasi
                         </a>
                         {% endif %}
                     </div>

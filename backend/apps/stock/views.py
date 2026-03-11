@@ -1,12 +1,18 @@
-from django.shortcuts import render, get_object_or_404
+from decimal import Decimal
+
+from django.contrib import messages
+from django.db import transaction as db_transaction
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, F
+from django.utils import timezone
 
-from .models import Stock, Transaction
-from apps.items.models import Category, Location, FundingSource, Item
+from apps.core.decorators import perm_required
+from .forms import StockTransferForm
+from .models import Stock, Transaction, StockTransfer, StockTransferItem
+from apps.items.models import Location, FundingSource, Item
 from django.http import JsonResponse
-from datetime import datetime
 
 
 @login_required
@@ -268,6 +274,280 @@ def api_item_search(request):
                 "stock": sum(
                     [s.quantity for s in item.stock_entries.all()]
                 ),  # Quick stock sum
+            }
+        )
+
+    return JsonResponse({"results": results})
+
+
+@login_required
+def transfer_list(request):
+    queryset = StockTransfer.objects.select_related(
+        "source_location", "destination_location", "created_by", "completed_by"
+    ).order_by("-transfer_date", "-created_at")
+
+    search = request.GET.get("q", "").strip()
+    if search:
+        queryset = queryset.filter(
+            Q(document_number__icontains=search)
+            | Q(source_location__name__icontains=search)
+            | Q(destination_location__name__icontains=search)
+        )
+
+    status = request.GET.get("status", "")
+    if status:
+        queryset = queryset.filter(status=status)
+
+    paginator = Paginator(queryset, 25)
+    transfers = paginator.get_page(request.GET.get("page"))
+
+    return render(
+        request,
+        "stock/transfer_list.html",
+        {
+            "transfers": transfers,
+            "search": search,
+            "selected_status": status,
+            "status_draft": "selected" if status == StockTransfer.Status.DRAFT else "",
+            "status_completed": "selected"
+            if status == StockTransfer.Status.COMPLETED
+            else "",
+        },
+    )
+
+
+@login_required
+@perm_required("stock.add_stocktransfer")
+def transfer_create(request):
+    if request.method == "POST":
+        form = StockTransferForm(request.POST)
+        stock_ids = request.POST.getlist("stock_id")
+        qty_values = request.POST.getlist("quantity")
+
+        if form.is_valid():
+            transfer = form.save(commit=False)
+            transfer.created_by = request.user
+            transfer.status = StockTransfer.Status.DRAFT
+            transfer.save()
+
+            created_count = 0
+            for idx, stock_id in enumerate(stock_ids):
+                qty_raw = (qty_values[idx] if idx < len(qty_values) else "").strip()
+                if not qty_raw:
+                    continue
+
+                try:
+                    qty = Decimal(qty_raw)
+                except Exception:
+                    continue
+
+                if qty <= 0:
+                    continue
+
+                stock = (
+                    Stock.objects.filter(pk=stock_id)
+                    .select_related("item", "location")
+                    .first()
+                )
+                if not stock:
+                    continue
+                if stock.location_id != transfer.source_location_id:
+                    continue
+                if qty > stock.available_quantity:
+                    continue
+
+                StockTransferItem.objects.create(
+                    transfer=transfer,
+                    stock=stock,
+                    item=stock.item,
+                    quantity=qty,
+                    notes="",
+                )
+                created_count += 1
+
+            if created_count == 0:
+                transfer.delete()
+                messages.error(
+                    request,
+                    "Pilih minimal satu item dengan jumlah mutasi valid (> 0).",
+                )
+            else:
+                messages.success(
+                    request,
+                    f"Mutasi lokasi {transfer.document_number} berhasil dibuat.",
+                )
+                return redirect("stock:transfer_detail", transfer_id=transfer.pk)
+    else:
+        form = StockTransferForm()
+
+    return render(
+        request,
+        "stock/transfer_form.html",
+        {"form": form, "title": "Buat Mutasi Lokasi"},
+    )
+
+
+@login_required
+def transfer_detail(request, transfer_id):
+    transfer = get_object_or_404(
+        StockTransfer.objects.select_related(
+            "source_location", "destination_location", "created_by", "completed_by"
+        ),
+        pk=transfer_id,
+    )
+    items = transfer.items.select_related(
+        "item", "stock", "stock__sumber_dana"
+    ).order_by("id")
+    return render(
+        request,
+        "stock/transfer_detail.html",
+        {"transfer": transfer, "items": items},
+    )
+
+
+@login_required
+@perm_required("stock.change_stocktransfer")
+def transfer_complete(request, transfer_id):
+    transfer = get_object_or_404(StockTransfer, pk=transfer_id)
+    if request.method != "POST":
+        return redirect("stock:transfer_detail", transfer_id=transfer.pk)
+
+    if transfer.status != StockTransfer.Status.DRAFT:
+        messages.error(request, "Hanya mutasi Draft yang dapat diselesaikan.")
+        return redirect("stock:transfer_detail", transfer_id=transfer.pk)
+
+    transfer_items = list(
+        transfer.items.select_related("item", "stock", "stock__sumber_dana")
+    )
+    if not transfer_items:
+        messages.error(request, "Mutasi tidak memiliki item.")
+        return redirect("stock:transfer_detail", transfer_id=transfer.pk)
+
+    try:
+        with db_transaction.atomic():
+            for line in transfer_items:
+                source_stock = Stock.objects.select_for_update().get(pk=line.stock_id)
+
+                if source_stock.location_id != transfer.source_location_id:
+                    raise ValueError(
+                        f"Batch {source_stock.batch_lot} tidak berada di lokasi asal dokumen."
+                    )
+
+                if line.quantity > source_stock.available_quantity:
+                    raise ValueError(
+                        f"Stok tidak cukup untuk {line.item.nama_barang} batch {source_stock.batch_lot}."
+                    )
+
+                source_stock.quantity = source_stock.quantity - line.quantity
+                source_stock.save(update_fields=["quantity", "updated_at"])
+
+                destination_stock, created = (
+                    Stock.objects.select_for_update().get_or_create(
+                        item=source_stock.item,
+                        location=transfer.destination_location,
+                        batch_lot=source_stock.batch_lot,
+                        sumber_dana=source_stock.sumber_dana,
+                        defaults={
+                            "expiry_date": source_stock.expiry_date,
+                            "quantity": line.quantity,
+                            "reserved": Decimal("0"),
+                            "unit_price": source_stock.unit_price,
+                            "receiving_ref": source_stock.receiving_ref,
+                        },
+                    )
+                )
+                if not created:
+                    destination_stock.quantity = (
+                        destination_stock.quantity + line.quantity
+                    )
+                    destination_stock.save(update_fields=["quantity", "updated_at"])
+
+                Transaction.objects.create(
+                    transaction_type=Transaction.TransactionType.OUT,
+                    item=line.item,
+                    location=transfer.source_location,
+                    batch_lot=source_stock.batch_lot,
+                    quantity=line.quantity,
+                    unit_price=source_stock.unit_price,
+                    sumber_dana=source_stock.sumber_dana,
+                    reference_type=Transaction.ReferenceType.TRANSFER,
+                    reference_id=transfer.pk,
+                    user=request.user,
+                    notes=f"Mutasi lokasi {transfer.document_number} ke {transfer.destination_location.name}",
+                )
+                Transaction.objects.create(
+                    transaction_type=Transaction.TransactionType.IN,
+                    item=line.item,
+                    location=transfer.destination_location,
+                    batch_lot=source_stock.batch_lot,
+                    quantity=line.quantity,
+                    unit_price=source_stock.unit_price,
+                    sumber_dana=source_stock.sumber_dana,
+                    reference_type=Transaction.ReferenceType.TRANSFER,
+                    reference_id=transfer.pk,
+                    user=request.user,
+                    notes=f"Mutasi lokasi {transfer.document_number} dari {transfer.source_location.name}",
+                )
+
+            transfer.status = StockTransfer.Status.COMPLETED
+            transfer.completed_by = request.user
+            transfer.completed_at = timezone.now()
+            transfer.save(
+                update_fields=["status", "completed_by", "completed_at", "updated_at"]
+            )
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect("stock:transfer_detail", transfer_id=transfer.pk)
+
+    messages.success(
+        request, f"Mutasi lokasi {transfer.document_number} selesai diproses."
+    )
+    return redirect("stock:transfer_detail", transfer_id=transfer.pk)
+
+
+@login_required
+@perm_required("stock.add_stocktransfer", "stock.change_stocktransfer")
+def api_location_stock_search(request):
+    location_id = request.GET.get("location")
+    q = request.GET.get("q", "").strip()
+
+    if not location_id:
+        return JsonResponse({"results": []})
+
+    queryset = (
+        Stock.objects.select_related(
+            "item", "item__kategori", "sumber_dana", "location"
+        )
+        .filter(location_id=location_id)
+        .filter(quantity__gt=F("reserved"))
+        .order_by("expiry_date", "item__nama_barang", "batch_lot")
+    )
+    if q:
+        queryset = queryset.filter(
+            Q(item__kode_barang__icontains=q)
+            | Q(item__nama_barang__icontains=q)
+            | Q(item__kategori__name__icontains=q)
+            | Q(batch_lot__icontains=q)
+        )
+
+    results = []
+    for stock in queryset[:200]:
+        results.append(
+            {
+                "stock_id": stock.id,
+                "item_id": stock.item_id,
+                "kode": stock.item.kode_barang,
+                "nama": stock.item.nama_barang,
+                "kategori": stock.item.kategori.name if stock.item.kategori else "-",
+                "batch": stock.batch_lot,
+                "expiry": stock.expiry_date.strftime("%d/%m/%Y")
+                if stock.expiry_date
+                else "-",
+                "qty": str(stock.quantity),
+                "reserved": str(stock.reserved),
+                "available": str(stock.available_quantity),
+                "funding": stock.sumber_dana.name,
+                "unit_price": str(stock.unit_price),
             }
         )
 

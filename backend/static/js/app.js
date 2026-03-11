@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initStockByItemFilter();
     initFormsetControls();
     initStockCardSearch();
+    initStockTransferTable();
+    initTooltips();
 });
 
 /** Sidebar toggle for mobile */
@@ -559,4 +561,97 @@ function formatCurrency(num) {
         currency: 'IDR',
         minimumFractionDigits: 0,
     }).format(num);
+}
+
+/** Initialize Bootstrap tooltips */
+function initTooltips() {
+    if (typeof bootstrap === 'undefined' || !bootstrap.Tooltip) return;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+        bootstrap.Tooltip.getOrCreateInstance(el);
+    });
+}
+
+/** Stock transfer create page: location-indexed searchable stock table */
+function initStockTransferTable() {
+    const form = document.getElementById('transferForm');
+    if (!form) return;
+
+    const sourceLocation = form.querySelector('[name="source_location"]');
+    const searchInput = document.getElementById('locationStockSearch');
+    const tableBody = document.getElementById('locationStockTableBody');
+    const searchUrl = form.getAttribute('data-stock-search-url');
+
+    if (!sourceLocation || !searchInput || !tableBody || !searchUrl) return;
+
+    let debounceTimer = null;
+
+    const renderRows = (rows) => {
+        tableBody.innerHTML = '';
+        if (!rows || rows.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="8" class="text-center text-muted py-3">Tidak ada stok yang cocok.</td>';
+            tableBody.appendChild(tr);
+            return;
+        }
+
+        rows.forEach((row) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${row.kode}</code><input type="hidden" name="stock_id" value="${row.stock_id}"></td>
+                <td>${row.nama}</td>
+                <td><span class="badge bg-light text-dark border">${row.kategori || '-'}</span></td>
+                <td>${row.batch}</td>
+                <td>${row.expiry}</td>
+                <td class="text-end fw-semibold">${row.available}</td>
+                <td><span class="badge bg-light text-dark border">${row.funding}</span></td>
+                <td>
+                    <div class="input-group input-group-sm">
+                        <input type="number" step="0.01" min="0" max="${row.available}" name="quantity" class="form-control form-control-sm" value="0" placeholder="0">
+                        <button type="button" class="btn btn-outline-secondary js-fill-max" data-available="${row.available}" title="Isi Semua" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Isi Semua">
+                            <i class="bi bi-arrow-bar-down"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        initTooltips();
+    };
+
+    tableBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.js-fill-max');
+        if (!btn) return;
+        const row = btn.closest('tr');
+        if (!row) return;
+        const qtyInput = row.querySelector('input[name="quantity"]');
+        if (!qtyInput) return;
+        qtyInput.value = btn.getAttribute('data-available') || '0';
+    });
+
+    const fetchRows = () => {
+        const location = sourceLocation.value;
+        const query = searchInput.value.trim();
+
+        if (!location) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Pilih lokasi asal untuk menampilkan stok.</td></tr>';
+            return;
+        }
+
+        const url = `${searchUrl}?location=${encodeURIComponent(location)}&q=${encodeURIComponent(query)}`;
+        fetch(url)
+            .then((res) => res.json())
+            .then((data) => renderRows(data.results || []))
+            .catch(() => {
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-3">Gagal memuat data stok.</td></tr>';
+            });
+    };
+
+    sourceLocation.addEventListener('change', fetchRows);
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fetchRows, 250);
+    });
+
+    fetchRows();
 }

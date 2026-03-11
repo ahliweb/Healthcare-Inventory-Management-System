@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Mutasi Lokasi - Healthcare IMS{% endblock %}
+{% block page_title %}Mutasi Lokasi{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <h5><i class="bi bi-arrow-left-right me-2"></i>Daftar Mutasi Lokasi</h5>
+        <a href="{% url 'stock:transfer_create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Buat Mutasi
+        </a>
+    </div>
+
+    <div class="px-3 py-2 border-bottom bg-light">
+        <form method="get" class="filter-form">
+            <input type="text" name="q" class="form-control" placeholder="Cari no dokumen / lokasi..." value="{{ search }}">
+            <select name="status" class="form-select">
+                <option value="">Semua Status</option>
+                <option value="DRAFT" {{ status_draft }}>Draft</option>
+                <option value="COMPLETED" {{ status_completed }}>Selesai</option>
+            </select>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
+                {% if search or selected_status %}
+                <a href="{% url 'stock:transfer_list' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>No. Dokumen</th>
+                    <th>Tanggal</th>
+                    <th>Lokasi Asal</th>
+                    <th>Lokasi Tujuan</th>
+                    <th>Status</th>
+                    <th>Dibuat Oleh</th>
+                    <th class="text-end">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trf in transfers %}
+                <tr>
+                    <td><a href="{% url 'stock:transfer_detail' trf.pk %}" class="fw-semibold text-decoration-none">{{ trf.document_number }}</a></td>
+                    <td>{{ trf.transfer_date|date:"d/m/Y" }}</td>
+                    <td>{{ trf.source_location.name }}</td>
+                    <td>{{ trf.destination_location.name }}</td>
+                    <td>
+                        <span class="badge-status badge-{% if trf.status == 'COMPLETED' %}verified{% else %}draft{% endif %}">{{ trf.get_status_display }}</span>
+                    </td>
+                    <td>{{ trf.created_by }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'stock:transfer_detail' trf.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-arrow-left-right d-block"></i>
+                            <p>Belum ada data mutasi lokasi</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
