@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTypeaheadSelects();
     initStockByItemFilter();
     initFormsetControls();
+    initStockCardSearch();
 });
 
 /** Sidebar toggle for mobile */
@@ -281,6 +282,136 @@ function initFormsetControls() {
                 totalInput.value = remaining;
             });
         });
+    });
+}
+
+/** Kartu stok: inline typeahead search with keyboard navigation */
+function initStockCardSearch() {
+    const searchInput = document.getElementById('itemSearch');
+    const searchResults = document.getElementById('searchResults');
+    if (!searchInput || !searchResults) return;
+
+    const searchUrl = searchInput.getAttribute('data-search-url') || '/stock/api/item-search/';
+    const detailTemplate = searchInput.getAttribute('data-detail-template') || '/stock/stock-card/0/';
+    let debounceTimer = null;
+    let activeIndex = -1;
+
+    const buildDetailUrl = (id) => detailTemplate.replace(/0\/?$/, `${id}/`);
+
+    const getResultItems = () => Array.from(searchResults.querySelectorAll('.search-result-item'));
+
+    const setActiveIndex = (index) => {
+        const items = getResultItems();
+        items.forEach((el, i) => {
+            el.classList.toggle('active', i === index);
+            if (i === index) el.scrollIntoView({ block: 'nearest' });
+        });
+        activeIndex = index;
+    };
+
+    const resetActiveIndex = () => {
+        activeIndex = -1;
+        getResultItems().forEach((el) => el.classList.remove('active'));
+    };
+
+    const showNoResult = (message) => {
+        searchResults.innerHTML = `<div class="p-3 text-center text-muted">${message}</div>`;
+        searchResults.style.display = 'block';
+        resetActiveIndex();
+    };
+
+    const renderResults = (results, query) => {
+        searchResults.innerHTML = '';
+        if (!results || results.length === 0) {
+            showNoResult(`Tidak ada barang yang cocok dengan "${query}"`);
+            return;
+        }
+
+        results.forEach((item) => {
+            const text = item.text || '';
+            const parts = text.split(' - ');
+            const code = parts[0] || '';
+            const name = parts.slice(1).join(' - ') || text;
+
+            const a = document.createElement('a');
+            a.href = buildDetailUrl(item.id);
+            a.className = 'search-result-item';
+            a.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">${name}</div>
+                        <div class="item-code">${code}</div>
+                    </div>
+                    <div class="text-end text-muted small">
+                        <div><span class="badge bg-light text-dark border">${item.kategori || '-'}</span></div>
+                        <div>Stok: ${item.stock ?? 0} ${item.satuan || ''}</div>
+                    </div>
+                </div>
+            `;
+            a.addEventListener('mouseenter', () => {
+                const items = getResultItems();
+                setActiveIndex(items.indexOf(a));
+            });
+            searchResults.appendChild(a);
+        });
+
+        searchResults.style.display = 'block';
+        setActiveIndex(0);
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+            resetActiveIndex();
+        }
+    });
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const query = searchInput.value.trim();
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            resetActiveIndex();
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            const url = `${searchUrl}?q=${encodeURIComponent(query)}`;
+            fetch(url)
+                .then((response) => response.json())
+                .then((data) => renderResults(data.results, query))
+                .catch(() => showNoResult('Gagal memuat data barang.'));
+        }, 300);
+    });
+
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim().length >= 2 && searchResults.innerHTML !== '') {
+            searchResults.style.display = 'block';
+            if (activeIndex < 0 && getResultItems().length > 0) setActiveIndex(0);
+        }
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+        const items = getResultItems();
+        if (searchResults.style.display !== 'block' || items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIndex = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
+            setActiveIndex(nextIndex);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const nextIndex = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
+            setActiveIndex(nextIndex);
+        } else if (e.key === 'Enter') {
+            if (activeIndex >= 0 && activeIndex < items.length) {
+                e.preventDefault();
+                window.location.href = items[activeIndex].href;
+            }
+        } else if (e.key === 'Escape') {
+            searchResults.style.display = 'none';
+            resetActiveIndex();
+        }
     });
 }
 

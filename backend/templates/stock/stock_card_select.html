@@ -38,6 +38,10 @@
     .search-result-item:hover {
         background-color: #f8f9fa;
     }
+    .search-result-item.active {
+        background-color: #e8efff;
+        outline: none;
+    }
     .search-result-item .item-code {
         font-family: monospace;
         color: #6c757d;
@@ -58,7 +62,9 @@
                     <i class="bi bi-search text-muted"></i>
                 </span>
                 <input type="text" id="itemSearch" class="form-control border-start-0 ps-0" 
-                    placeholder="Ketik kode atau nama barang..." autocomplete="off">
+                    placeholder="Ketik kode atau nama barang..." autocomplete="off"
+                    data-search-url="{% url 'stock:api_item_search' %}"
+                    data-detail-template="{% url 'stock:stock_card_detail' 0 %}">
             </div>
             <div id="searchResults" class="search-results">
                 <!-- Results will be populated here by JavaScript -->
@@ -67,78 +73,25 @@
         <p class="text-muted mt-4">
             Mulai mengetik nama atau kode barang untuk melihat Kartu Stok (riwayat transaksi).
         </p>
+
+        <div class="d-flex justify-content-center gap-2 mt-3">
+            <a href="{% url 'stock:transaction_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-clock-history me-1"></i>Lihat Log Semua Mutasi
+            </a>
+        </div>
+
+        {% if recent_items %}
+        <div class="mt-4 text-start">
+            <div class="small text-muted mb-2">Barang Terakhir Dilihat</div>
+            <div class="d-flex flex-wrap gap-2">
+                {% for recent in recent_items %}
+                <a href="{% url 'stock:stock_card_detail' recent.id %}" class="btn btn-outline-primary btn-sm">
+                    <span class="font-monospace">{{ recent.kode_barang }}</span> - {{ recent.nama_barang|truncatechars:30 }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('itemSearch');
-    const searchResults = document.getElementById('searchResults');
-    let debounceTimer;
-
-    // Handle clicks outside to close the dropdown
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-            searchResults.style.display = 'none';
-        }
-    });
-
-    searchInput.addEventListener('input', function() {
-        clearTimeout(debounceTimer);
-        const query = this.value.trim();
-        
-        if (query.length < 2) {
-            searchResults.style.display = 'none';
-            return;
-        }
-
-        debounceTimer = setTimeout(() => {
-            fetch(`/stock/api/item-search/?q=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    searchResults.innerHTML = '';
-                    
-                    if (data.results && data.results.length > 0) {
-                        data.results.forEach(item => {
-                            const a = document.createElement('a');
-                            a.href = `/stock/stock-card/${item.id}/`;
-                            a.className = 'search-result-item';
-                            a.innerHTML = `
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="fw-bold">${item.text.split(' - ')[1] || item.text}</div>
-                                        <div class="item-code">${item.text.split(' - ')[0]}</div>
-                                    </div>
-                                    <div class="text-end text-muted small">
-                                        <div><span class="badge bg-light text-dark border">${item.kategori}</span></div>
-                                        <div>Stok: ${item.stock} ${item.satuan}</div>
-                                    </div>
-                                </div>
-                            `;
-                            searchResults.appendChild(a);
-                        });
-                        searchResults.style.display = 'block';
-                    } else {
-                        searchResults.innerHTML = `
-                            <div class="p-3 text-center text-muted">
-                                Tidak ada barang yang cocok dengan "${query}"
-                            </div>
-                        `;
-                        searchResults.style.display = 'block';
-                    }
-                })
-                .catch(error => console.error('Error fetching items:', error));
-        }, 300); // 300ms debounce
-    });
-
-    // Handle focus to show results again if query is still valid
-    searchInput.addEventListener('focus', function() {
-        if (this.value.trim().length >= 2 && searchResults.innerHTML !== '') {
-            searchResults.style.display = 'block';
-        }
-    });
-});
-</script>
 {% endblock %}
