@@ -14,6 +14,70 @@
     .print-header { display: block !important; margin-bottom: 2rem; text-align: center; }
 }
 .balance-col { width: 120px; text-align: right; }
+.stock-card-paper {
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+.stock-card-headline {
+    text-align: center;
+    border-bottom: 2px solid #cbd5e1;
+    padding: 14px 18px;
+}
+.stock-card-headline h5 {
+    margin: 0;
+    letter-spacing: .08em;
+    font-weight: 700;
+}
+.stock-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 22px;
+    padding: 12px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: .92rem;
+}
+.stock-meta-line {
+    display: flex;
+    gap: 8px;
+}
+.stock-meta-line b {
+    min-width: 120px;
+}
+.ledger-table {
+    font-size: 0.92rem;
+}
+.ledger-table thead th {
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 0.78rem;
+    background: #f8fafc;
+    border-color: #cbd5e1 !important;
+}
+.ledger-table th,
+.ledger-table td {
+    border-color: #d1d5db !important;
+    vertical-align: middle;
+}
+.ledger-table tbody td {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+.ledger-table .num-cell {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+}
+.ledger-table .doc-ref {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+}
+.ledger-table .ledger-note {
+    line-height: 1.25;
+}
+@media (max-width: 768px) {
+    .stock-meta-grid { grid-template-columns: 1fr; }
+}
 </style>
 {% endblock %}
 
@@ -24,36 +88,33 @@
     <p class="mb-4 text-muted">Dicetak pada: {% now "d/m/Y H:i" %}</p>
 </div>
 
-<!-- Item Info Header -->
-<div class="card mb-3 border-0 shadow-sm">
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-md-7">
-                <h4 class="card-title fw-bold mb-1">{{ item.nama_barang }}</h4>
-                <div class="text-muted font-monospace">{{ item.kode_barang }} &bull; Satuan: {{ item.satuan.name }} &bull; Kategori: {{ item.kategori.name }}</div>
-            </div>
-            <div class="col-md-5 text-md-end mt-3 mt-md-0 print-hide">
-                <div class="d-inline-block bg-light px-3 py-2 rounded text-end me-2">
-                    <small class="text-muted d-block">Stok Akhir</small>
-                    <span class="fs-5 fw-bold">{{ closing_balance }}</span>
-                </div>
-                <div class="d-inline-block align-top">
-                    <a href="{% url 'stock:stock_card_select' %}" class="btn btn-outline-secondary h-100 me-2">
-                        <i class="bi bi-arrow-left me-1"></i> Kembali
-                    </a>
-                    <a href="{% url 'stock:transaction_list' %}" class="btn btn-outline-secondary h-100 me-2 print-hide">
-                        <i class="bi bi-clock-history me-1"></i> Log Mutasi
-                    </a>
-                    <button onclick="window.print()" class="btn btn-outline-primary h-100">
-                        <i class="bi bi-printer me-1"></i> Cetak
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="d-flex justify-content-end mb-2 gap-2 print-hide">
+    <a href="{% url 'stock:stock_card_select' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Kembali
+    </a>
+    <a href="{% url 'stock:transaction_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-clock-history me-1"></i>Log Mutasi
+    </a>
+    <button onclick="window.print()" class="btn btn-outline-primary">
+        <i class="bi bi-printer me-1"></i>Cetak
+    </button>
 </div>
 
-<div class="table-container shadow-sm">
+<div class="stock-card-paper shadow-sm">
+    <div class="stock-card-headline">
+        <h5>KARTU STOK</h5>
+    </div>
+
+    <div class="stock-meta-grid">
+        <div class="stock-meta-line"><b>NAMA OBAT</b><span>: {{ item.nama_barang }}</span></div>
+        <div class="stock-meta-line"><b>TAHUN ANGGARAN</b><span>: {{ budget_year }}</span></div>
+        <div class="stock-meta-line"><b>KODE</b><span>: {{ item.kode_barang }}</span></div>
+        <div class="stock-meta-line"><b>SATUAN</b><span>: {{ item.satuan.name }}</span></div>
+        <div class="stock-meta-line"><b>KEMASAN</b><span>: {{ item.kategori.name|default:'-' }}</span></div>
+        <div class="stock-meta-line"><b>SUMBER DANA</b><span>: {{ funding_display }}</span></div>
+    </div>
+
+    <div class="table-container shadow-none border-0">
     <!-- Filters -->
     <div class="px-3 py-3 border-bottom bg-light print-hide">
         <form method="get" class="filter-form d-flex gap-2 flex-wrap align-items-center">
@@ -78,17 +139,17 @@
 
     <!-- Stock Card Table -->
     <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle mb-0">
+        <table class="table table-bordered align-middle mb-0 ledger-table">
             <thead class="table-light">
                 <tr>
-                    <th rowspan="2" class="align-middle" width="12%">Tanggal</th>
-                    <th rowspan="2" class="align-middle" width="12%">Tipe & Ref</th>
-                    <th rowspan="2" class="align-middle">Catatan / Lot</th>
+                    <th rowspan="2" class="align-middle" width="12%">Tgl</th>
+                    <th rowspan="2" class="align-middle" width="12%">Dokumen</th>
+                    <th rowspan="2" class="align-middle">Dari/Kepada & No Batch</th>
                     <th rowspan="2" class="align-middle">Lokasi</th>
                     <th colspan="3" class="text-center border-bottom-0">Mutasi</th>
                 </tr>
                 <tr>
-                    <th class="text-end" width="10%">Masuk</th>
+                    <th class="text-end" width="10%">Terima</th>
                     <th class="text-end" width="10%">Keluar</th>
                     <th class="text-end balance-col bg-light fw-bold">Saldo</th>
                 </tr>
@@ -111,16 +172,16 @@
                         <span class="badge {% if tx.transaction_type == 'IN' or tx.transaction_type == 'RETURN' %}bg-success-subtle text-success{% elif tx.transaction_type == 'OUT' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %} d-block mb-1 text-center">
                             {{ tx.get_transaction_type_display }}
                         </span>
-                        <code class="d-block text-center">{{ tx.reference_type }}-{{ tx.reference_id }}</code>
+                        <code class="d-block text-center doc-ref">{{ tx.reference_label }}</code>
                     </td>
                     <td>
-                        {% if tx.notes %}<div class="mb-1">{{ tx.notes }}</div>{% endif %}
+                        {% if tx.notes %}<div class="mb-1 ledger-note">{{ tx.notes }}</div>{% endif %}
                         {% if tx.batch_lot %}<span class="badge bg-light text-dark border"><i class="bi bi-box-seam me-1"></i>{{ tx.batch_lot }}</span>{% endif %}
                     </td>
                     <td>{{ tx.location.name|default:"-" }}</td>
-                    <td class="text-end text-success fw-semibold">{% if tx.tx_in > 0 %}+{{ tx.tx_in }}{% else %}-{% endif %}</td>
-                    <td class="text-end text-danger fw-semibold">{% if tx.tx_out > 0 %}-{{ tx.tx_out }}{% else %}-{% endif %}</td>
-                    <td class="text-end fw-bold bg-light">{{ tx.running_balance }}</td>
+                    <td class="text-end text-success fw-semibold num-cell">{% if tx.tx_in > 0 %}+{{ tx.tx_in }}{% else %}-{% endif %}</td>
+                    <td class="text-end text-danger fw-semibold num-cell">{% if tx.tx_out > 0 %}-{{ tx.tx_out }}{% else %}-{% endif %}</td>
+                    <td class="text-end fw-bold bg-light num-cell">{{ tx.running_balance }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -136,10 +197,10 @@
             {% if transactions %}
             <tfoot class="table-light fw-bold">
                 <tr>
-                    <td colspan="4" class="text-end">TOTAL MUTASI (Periode/Filter ini)</td>
-                    <td class="text-end text-success">+{{ total_in }}</td>
-                    <td class="text-end text-danger">-{{ total_out }}</td>
-                    <td class="text-end bg-light">{{ closing_balance }}</td>
+                    <td colspan="4" class="text-end">{{ total_label }}</td>
+                    <td class="text-end text-success num-cell">+{{ total_in }}</td>
+                    <td class="text-end text-danger num-cell">-{{ total_out }}</td>
+                    <td class="text-end bg-light num-cell">{{ closing_balance }}</td>
                 </tr>
             </tfoot>
             {% endif %}
@@ -171,5 +232,6 @@
         </nav>
     </div>
     {% endif %}
+</div>
 </div>
 {% endblock %}

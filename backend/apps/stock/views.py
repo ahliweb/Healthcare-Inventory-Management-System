@@ -194,9 +194,92 @@ def stock_card_detail(request, item_id):
     # Fetch all matching transactions to calculate running balances
     transactions = list(queryset)
 
+    # Resolve human-friendly document numbers for reference labels
+    receiving_ids = [
+        tx.reference_id
+        for tx in transactions
+        if tx.reference_type == Transaction.ReferenceType.RECEIVING and tx.reference_id
+    ]
+    distribution_ids = [
+        tx.reference_id
+        for tx in transactions
+        if tx.reference_type == Transaction.ReferenceType.DISTRIBUTION
+        and tx.reference_id
+    ]
+    recall_ids = [
+        tx.reference_id
+        for tx in transactions
+        if tx.reference_type == Transaction.ReferenceType.RECALL and tx.reference_id
+    ]
+    expired_ids = [
+        tx.reference_id
+        for tx in transactions
+        if tx.reference_type == Transaction.ReferenceType.EXPIRED and tx.reference_id
+    ]
+    transfer_ids = [
+        tx.reference_id
+        for tx in transactions
+        if tx.reference_type == Transaction.ReferenceType.TRANSFER and tx.reference_id
+    ]
+
+    reference_labels = {}
+    if receiving_ids:
+        from apps.receiving.models import Receiving
+
+        reference_labels[Transaction.ReferenceType.RECEIVING] = {
+            doc.id: doc.document_number
+            for doc in Receiving.objects.filter(id__in=receiving_ids).only(
+                "id", "document_number"
+            )
+        }
+    if distribution_ids:
+        from apps.distribution.models import Distribution
+
+        reference_labels[Transaction.ReferenceType.DISTRIBUTION] = {
+            doc.id: doc.document_number
+            for doc in Distribution.objects.filter(id__in=distribution_ids).only(
+                "id", "document_number"
+            )
+        }
+    if recall_ids:
+        from apps.recall.models import Recall
+
+        reference_labels[Transaction.ReferenceType.RECALL] = {
+            doc.id: doc.document_number
+            for doc in Recall.objects.filter(id__in=recall_ids).only(
+                "id", "document_number"
+            )
+        }
+    if expired_ids:
+        from apps.expired.models import Expired
+
+        reference_labels[Transaction.ReferenceType.EXPIRED] = {
+            doc.id: doc.document_number
+            for doc in Expired.objects.filter(id__in=expired_ids).only(
+                "id", "document_number"
+            )
+        }
+    if transfer_ids:
+        reference_labels[Transaction.ReferenceType.TRANSFER] = {
+            doc.id: doc.document_number
+            for doc in StockTransfer.objects.filter(id__in=transfer_ids).only(
+                "id", "document_number"
+            )
+        }
+
+    funding_labels = []
+    for tx in transactions:
+        if tx.sumber_dana_id and tx.sumber_dana:
+            label = f"{tx.sumber_dana.code}/{tx.sumber_dana.name}"
+            if label not in funding_labels:
+                funding_labels.append(label)
+
+    funding_display = ", ".join(funding_labels[:4]) if funding_labels else "-"
+
     current_balance = opening_balance
     total_in = Decimal("0")
     total_out = Decimal("0")
+    include_transfer_in_totals = bool(location_id)
 
     for tx in transactions:
         tx_in = Decimal("0")
@@ -208,16 +291,28 @@ def stock_card_detail(request, item_id):
         ]:
             tx_in = tx.quantity
             current_balance += tx_in
-            total_in += tx_in
+            if (
+                include_transfer_in_totals
+                or tx.reference_type != Transaction.ReferenceType.TRANSFER
+            ):
+                total_in += tx_in
         else:
             tx_out = tx.quantity
             current_balance -= tx_out
-            total_out += tx_out
+            if (
+                include_transfer_in_totals
+                or tx.reference_type != Transaction.ReferenceType.TRANSFER
+            ):
+                total_out += tx_out
 
         # Attach dynamic attributes
         tx.tx_in = tx_in
         tx.tx_out = tx_out
         tx.running_balance = current_balance
+        tx.reference_label = reference_labels.get(tx.reference_type, {}).get(
+            tx.reference_id,
+            f"{tx.reference_type}-{tx.reference_id}",
+        )
 
     # Pagination
     paginator = Paginator(transactions, 50)
@@ -242,6 +337,11 @@ def stock_card_detail(request, item_id):
         "closing_balance": current_balance,
         "total_in": total_in,
         "total_out": total_out,
+        "total_label": "TOTAL MUTASI (Periode/Filter ini)"
+        if location_id
+        else "TOTAL MASUK/KELUAR EKSTERNAL (Mutasi internal dikecualikan)",
+        "funding_display": funding_display,
+        "budget_year": timezone.now().year,
         "date_from": date_from or "",
         "date_to": date_to or "",
         "locations": locations,
