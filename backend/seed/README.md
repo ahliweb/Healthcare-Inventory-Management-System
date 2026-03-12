@@ -29,6 +29,11 @@ Import lookup tables first, then items that reference them:
 3. Click **Submit** → review the dry-run preview
 4. Click **Confirm Import** to commit
 
+> **Admin Receiving CSV Import:**
+> For initial stock, you can also use Admin → Receivings → `import-csv/`.
+> Accepted date formats: `DD/MM/YYYY`, `YYYY-MM-DD`, `DD-MM-YYYY`, `DD/MM/YY`.
+> Decimal values accept comma decimal separator.
+
 ## Column Reference
 
 ### `code` Field Rules (all tables except items)

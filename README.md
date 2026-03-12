@@ -9,15 +9,18 @@ A web-based inventory management system for managing medicine and medical equipm
 - **Quick Lookup Creation** — Create Unit/Category/Program directly from item form via AJAX endpoints
 - **Multi-Location Stock Tracking** — Track inventory across multiple storage locations with batch/lot numbers
 - **FEFO Management** — First Expiry, First Out tracking with expiry date monitoring
+- **Stock Card (Kartu Stok)** — Item-centric movement history with running balance, date range filter, and reference document labels
+- **Stock Transfer (Mutasi Lokasi)** — Draft → Completed workflow for inter-location stock movement with automatic IN/OUT transactions
 - **Receiving Module** — Record incoming stock from procurement (eKatalog) and grants (Hibah)
 - **Receiving Planning Workflow** — Plan receipts with Draft → Submitted → Approved → Partial/Received → Closed flow
-- **Distribution Module** — Create and review LPLPO, allocation, and special request documents to facilities (workflow statuses are model-ready)
+- **Distribution Module** — Create and review LPLPO, allocation, and special request documents to facilities
 - **Recall Module** — Manage supplier returns with Draft → Submitted → Verified → Completed workflow
 - **Expired Module** — Manage expired/disposal documents with Draft → Submitted → Verified → Disposed workflow
 - **Funding Source Tracking** — Track budget allocation per batch (DAK, DAU, APBD, etc.)
 - **Audit Trail** — Immutable transaction log for all stock movements
 - **CSV Import/Export** — Bulk data operations via Django Admin (`django-import-export`)
 - **Smart Item Import Defaults** — Program items imported without a program are auto-mapped to a `DEFAULT` program
+- **Receiving CSV Import (Admin)** — Bulk initial receiving import with row-level validation, flexible date parsing, and automatic stock/transaction posting
 - **Dashboard** — Overview of stock levels, near-expiry items, and recent transactions
 - **Stock Opname** — Physical inventory counting with category-based filtering, staff assignment, and printable discrepancy reports
 - **Role-Based Access Control** — `@perm_required` decorator with Django groups/permissions (managed via Admin)
@@ -168,9 +171,10 @@ DJANGO-IMS/
 
 - **Receiving (regular):** Create/list/detail for direct receiving documents
 - **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed (`Transaction(IN)` created during receipt input)
-- **Distribution:** Fully implemented workflow (Draft → Submitted → Verified → Prepared → Distributed) with stock reservation & posting
+- **Distribution:** Create/list/detail is active; workflow status enum is available in model for phased rollout
 - **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)` on verify)
 - **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)` on verify)
+- **Stock Transfer:** Draft → Completed (`Transaction(OUT)` at source + `Transaction(IN)` at destination)
 - **Stock Opname:** Draft → In Progress (snapshots stock) → Completed (printable discrepancy report)
 
 ## 🧩 Item Module Notes

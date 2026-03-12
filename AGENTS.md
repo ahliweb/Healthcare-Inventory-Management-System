@@ -65,7 +65,7 @@ All apps live in `backend/apps/`. Each app follows standard Django structure: `m
 | `users` | `apps/users/` | Custom `User` model with role field; 5 roles (see below) |
 | `items` | `apps/items/` | Item master (medicines, equipment) + lookup tables (Unit, Category, Program, FundingSource, Supplier, Facility) |
 | `stock` | `apps/stock/` | `Stock` model (batch/lot tracking, FEFO), `Transaction` audit trail |
-| `receiving` | `apps/receiving/` | Incoming stock (procurement & grants), Draft → Submitted → Verified workflow |
+| `receiving` | `apps/receiving/` | Incoming stock (procurement & grants), regular + planned receiving workflows |
 | `distribution` | `apps/distribution/` | Outgoing stock to Puskesmas/facilities, multi-step workflow |
 | `recall` | `apps/recall/` | Supplier returns, Draft → Submitted → Verified → Completed |
 | `expired` | `apps/expired/` | Expired item disposal, Draft → Submitted → Verified → Disposed |
@@ -112,9 +112,10 @@ Most modules follow a status-based workflow with transitions enforced in views:
 
 - **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed (`Transaction(IN)` during receipt input)
 - **Receiving (regular):** create/list/detail available for direct documents
-- **Distribution:** Fully implemented workflow: Draft → Submitted → Verified → Prepared → Distributed (`Transaction(OUT)` when distributed)
+- **Distribution:** create/list/detail available; status enum supports Draft → Submitted → Verified → Prepared → Distributed
 - **Recall:** Draft → Submitted → Verified → Completed (`Transaction(OUT)`)
 - **Expired:** Draft → Submitted → Verified → Disposed (`Transaction(OUT)`)
+- **Stock Transfer:** Draft → Completed (`Transaction(OUT)` from source + `Transaction(IN)` at destination)
 
 ### Transaction Audit Trail
 
@@ -143,6 +144,24 @@ Document numbers (e.g., `RCV-YYYY-NNNNN`, `ITM-YYYY-NNNNN`) are auto-generated i
   - remove row per line
   - clear all with confirmation (`Hapus Semua`)
   - minimum one visible row
+
+### Stock Card & Transfer (Latest)
+
+- Stock module provides `Kartu Stok` selector + detail page with running balance and dynamic reference labels (`RECEIVING`, `DISTRIBUTION`, `RECALL`, `EXPIRED`, `TRANSFER`).
+- Stock card date filtering accepts `DD/MM/YYYY` and `YYYY-MM-DD` input formats.
+- Stock Transfer module routes:
+  - `GET /stock/transfers/`
+  - `GET|POST /stock/transfers/create/`
+  - `GET /stock/transfers/<id>/`
+  - `POST /stock/transfers/<id>/complete/`
+- Transfer completion updates source/destination stock atomically and writes paired transfer transactions.
+
+### Receiving CSV Import (Admin)
+
+- Receiving Admin includes custom `import-csv/` endpoint for saldo awal ingestion.
+- Date parser accepts `DD/MM/YYYY`, `YYYY-MM-DD`, `DD-MM-YYYY`, and `DD/MM/YY`.
+- Decimal parser tolerates comma decimal separator and returns row-specific error messages.
+- Import creates `Receiving(VERIFIED)` + `ReceivingItem` + `Stock` + `Transaction(IN)` in one flow.
 
 ### Item Module Behaviors (Latest)
 

@@ -43,6 +43,10 @@ This project uses **`django-import-export`** via the **Django Admin panel** for 
 > Use `receiving.csv` instead of `stock.csv` for initial stock seeding.
 > This creates proper audit trail (transactions) from day one.
 
+> [!NOTE]
+> Receiving Admin CSV import currently accepts date formats `DD/MM/YYYY`, `YYYY-MM-DD`, `DD-MM-YYYY`, and `DD/MM/YY`.
+> Decimal values support comma separators (for example `10,5`).
+
 ## How to Import (Django Admin)
 
 1. Go to **Django Admin** (`/admin/`)

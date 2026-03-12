@@ -131,7 +131,7 @@ erDiagram
         decimal quantity
         decimal unit_price NULL
         int sumber_dana_id FK NULL
-        string reference_type "Receiving, Distribution, Adjustment, Recall, Expired"
+        string reference_type "Receiving, Distribution, Adjustment, Recall, Expired, Transfer"
         int reference_id "Polymorphic reference"
         int user_id FK
         text notes NULL
@@ -373,6 +373,39 @@ erDiagram
     StockOpname }|--o{ User : "assigned_to"
     StockOpname ||--o{ StockOpnameItem : "contains"
     StockOpnameItem ||--|| Stock : "counts"
+
+    %% Stock Transfer Module
+    StockTransfer {
+        int id PK
+        string document_number UK "TRF-YYYY-NNNNN"
+        date transfer_date
+        int source_location_id FK
+        int destination_location_id FK
+        string status "Draft, Completed"
+        text notes NULL
+        int created_by_id FK
+        int completed_by_id FK NULL
+        timestamp completed_at NULL
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    StockTransferItem {
+        int id PK
+        int transfer_id FK
+        int stock_id FK
+        int item_id FK
+        decimal quantity
+        text notes NULL
+    }
+
+    StockTransfer ||--|| Location : "source"
+    StockTransfer ||--|| Location : "destination"
+    StockTransfer ||--|| User : "created_by"
+    StockTransfer ||--o| User : "completed_by"
+    StockTransfer ||--o{ StockTransferItem : "contains"
+    StockTransferItem ||--|| Stock : "from_batch"
+    StockTransferItem ||--|| Item : "item"
 ```
 
 ## Table Details
@@ -473,6 +506,7 @@ erDiagram
   - `OUT`: Distribution
   - `ADJUST`: Manual adjustments (stock opname)
   - `RETURN`: Returns from facilities
+- **Reference Types:** includes `TRANSFER` for stock transfer mutation documents
 - **Polymorphic Reference:** `reference_type` + `reference_id` links to source document
 
 ---

@@ -14,6 +14,11 @@ The project is currently in **active development** with a simplified setup:
 - **Frontend**: Django templates with Bootstrap5 (crispy-bootstrap5) — no separate frontend service
 - **Celery**: Not yet running (planned for alerts/notifications)
 
+### Current Feature Topology (Application Layer)
+
+- **Stock Card** and **Stock Transfer** run inside the Django app (`/stock/stock-card/*`, `/stock/transfers/*`) without extra infrastructure services.
+- **Receiving CSV Import** runs as a Django Admin endpoint and writes database records in one transaction flow.
+
 ```mermaid
 graph TD
     Client[Client Browser] -->|HTTP| Django[Django Dev Server\nmanage.py runserver\nPort 8000]

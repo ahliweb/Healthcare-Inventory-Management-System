@@ -362,6 +362,8 @@ tablib==3.9.0
 - **Receiving (planned):** Draft → Submitted → Approved → Partial/Received → Closed.
 - **Receiving stock impact:** `Transaction(IN)` and stock updates are created during planned receipt input.
 - **Distribution:** create/list/detail is active; model statuses exist (`DRAFT`, `SUBMITTED`, `VERIFIED`, `PREPARED`, `DISTRIBUTED`, `REJECTED`).
+- **Stock Transfer:** Draft → Completed flow is active; completion posts paired transfer transactions.
+- **Stock Card:** item selection + detail view is active with running balance and reference labels.
 
 ### Core Features
 
@@ -380,6 +382,8 @@ tablib==3.9.0
 - [x] Item import defaulting to `DEFAULT` Program when `is_program_item=1` and program is empty
 - [x] Stock list with search and filters
 - [x] Transaction history viewer
+- [x] Stock Card module (selector, running balance detail, date/location filters)
+- [x] Stock Transfer module (create, detail, complete with atomic stock mutation)
 - [x] Receiving module (list, create, detail)
 - [x] Distribution module (list, create, detail)
 - [x] Recall module (list, create, edit, detail, submit, verify, complete)
@@ -559,7 +563,7 @@ python manage.py createsuperuser
 11. ⬜ Celery tasks for expiry/low-stock alerts
 12. ✅ Permission-based access control (`@perm_required` decorator via Django groups)
 13. ✅ Receiving planned workflow (submit/approve/receive/close) with stock posting on receive
-14. ✅ Distribution workflow actions (verify/prepare/distribute with stock reservation posting)
+14. ⬜ Distribution workflow actions (verify/prepare/distribute with stock reservation posting)
 15. ✅ Recall workflow (status transitions + stock deduction + transaction posting)
 16. ✅ Expired workflow (status transitions + stock deduction + transaction posting)
 17. ⬜ Excel/PDF export for reports
