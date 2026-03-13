@@ -12,6 +12,10 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="stat-icon blue"><i class="bi bi-box-seam"></i></div>
+                    <button type="button" class="btn btn-link p-0 kpi-help" data-bs-toggle="tooltip" data-bs-placement="top"
+                        data-bs-title="Jumlah master barang aktif (Item.is_active = true)." aria-label="Info Total Jenis Barang">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
                 </div>
                 <div class="stat-value">{{ total_items }}</div>
                 <div class="stat-label">Total Jenis Barang</div>
@@ -23,6 +27,10 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="stat-icon green"><i class="bi bi-boxes"></i></div>
+                    <button type="button" class="btn btn-link p-0 kpi-help" data-bs-toggle="tooltip" data-bs-placement="top"
+                        data-bs-title="Jumlah entri stok dengan kuantitas > 0 (per batch/lokasi)." aria-label="Info Total Stok Aktif">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
                 </div>
                 <div class="stat-value">{{ total_stock_entries }}</div>
                 <div class="stat-label">Total Stok Aktif</div>
@@ -34,6 +42,10 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="stat-icon orange"><i class="bi bi-exclamation-triangle"></i></div>
+                    <button type="button" class="btn btn-link p-0 kpi-help" data-bs-toggle="tooltip" data-bs-placement="top"
+                        data-bs-title="Barang aktif dengan total stok di bawah minimum stock yang ditetapkan." aria-label="Info Stok Rendah">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
                 </div>
                 <div class="stat-value">{{ low_stock_count }}</div>
                 <div class="stat-label">Stok Rendah</div>
@@ -45,6 +57,10 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="stat-icon red"><i class="bi bi-calendar-x"></i></div>
+                    <button type="button" class="btn btn-link p-0 kpi-help" data-bs-toggle="tooltip" data-bs-placement="top"
+                        data-bs-title="Jumlah batch stok aktif dengan tanggal kedaluwarsa <= 90 hari ke depan." aria-label="Info Mendekati Kedaluwarsa">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
                 </div>
                 <div class="stat-value">{{ expiring_soon_count }}</div>
                 <div class="stat-label">Mendekati Kedaluwarsa</div>
@@ -60,7 +76,13 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <h6 class="mb-0">Total Kuantitas Tersedia</h6>
-                    <span class="badge bg-primary-subtle text-primary">Semua Lokasi</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary-subtle text-primary">Semua Lokasi</span>
+                        <button type="button" class="btn btn-link p-0 kpi-help" data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-title="Total penjumlahan field quantity pada stok aktif." aria-label="Info Total Kuantitas Tersedia">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="stat-value mb-1">{{ total_stock_quantity|id_decimal:2 }}</div>
                 <div class="text-muted small">Akumulasi seluruh kuantitas stok aktif</div>
@@ -72,7 +94,13 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <h6 class="mb-0">Estimasi Nilai Stok</h6>
-                    <span class="badge bg-success-subtle text-success">IDR</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-success-subtle text-success">IDR</span>
+                        <button type="button" class="btn btn-link p-0 kpi-help" data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-title="Total quantity x unit_price pada stok aktif (estimasi nilai buku)." aria-label="Info Estimasi Nilai Stok">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="stat-value mb-1">{{ total_stock_value|idr }}</div>
                 <div class="text-muted small">Dihitung dari kuantitas x harga satuan</div>
@@ -84,7 +112,13 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <h6 class="mb-0">Transaksi Hari Ini</h6>
-                    <i class="bi bi-activity text-info"></i>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-activity text-info"></i>
+                        <button type="button" class="btn btn-link p-0 kpi-help" data-bs-toggle="tooltip" data-bs-placement="top"
+                            data-bs-title="Jumlah transaksi yang dibuat pada tanggal hari ini." aria-label="Info Transaksi Hari Ini">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="stat-value mb-2">{{ today_transaction_count }}</div>
                 <div class="d-flex justify-content-between text-muted small">

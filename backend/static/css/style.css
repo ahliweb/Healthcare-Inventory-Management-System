@@ -384,6 +384,16 @@ body {
     font-weight: 500;
 }
 
+.kpi-help {
+    color: #94a3b8;
+    line-height: 1;
+}
+
+.kpi-help:hover,
+.kpi-help:focus {
+    color: #475569;
+}
+
 /* ===== Content Cards ===== */
 .content-card {
     background: #fff;
