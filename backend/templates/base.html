@@ -124,11 +124,18 @@
                     <i class="bi bi-bar-chart-line"></i><span>Laporan</span>
                 </a>
 
-                {% if user.is_superuser or user.role == 'ADMIN' %}
+                {% if user.role == 'ADMIN' or user.role == 'KEPALA' %}
                 <div class="sidebar-section-title">Administrasi</div>
+                <a href="{% url 'users:user_list' %}"
+                    class="sidebar-link {% if request.resolver_match.app_name == 'users' %}active{% endif %}"
+                    data-label="Manajemen User">
+                    <i class="bi bi-people"></i><span>Manajemen User</span>
+                </a>
+                {% if user.role == 'ADMIN' %}
                 <a href="{% url 'admin:index' %}" class="sidebar-link" target="_blank" data-label="Admin Panel">
                     <i class="bi bi-gear"></i><span>Admin Panel</span>
                 </a>
+                {% endif %}
                 {% endif %}
             </div>
         </nav>
@@ -169,6 +176,10 @@
                         {% elif request.resolver_match.app_name == 'stock' and request.resolver_match.url_name == 'transfer_create' or request.resolver_match.app_name == 'stock' and request.resolver_match.url_name == 'transfer_detail' or request.resolver_match.app_name == 'stock' and request.resolver_match.url_name == 'transfer_complete' %}
                         <a href="{% url 'stock:transfer_list' %}" class="btn btn-outline-secondary btn-sm" title="Kembali ke Mutasi Lokasi">
                             <i class="bi bi-arrow-left me-1"></i>Mutasi Lokasi
+                        </a>
+                        {% elif request.resolver_match.app_name == 'users' and request.resolver_match.url_name != 'user_list' %}
+                        <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary btn-sm" title="Kembali ke Manajemen User">
+                            <i class="bi bi-arrow-left me-1"></i>Manajemen User
                         </a>
                         {% endif %}
                     </div>

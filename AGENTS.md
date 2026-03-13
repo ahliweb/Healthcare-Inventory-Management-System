@@ -98,11 +98,17 @@ The system uses `@perm_required` decorator for permission-based access control v
 
 | Role | Access Scope |
 | --- | --- |
-| **Admin** | Full system access + user management |
-| **Kepala Instalasi** | Approvals, all reports, dashboard |
+| **Admin** | Full system access, User Management (view + create/edit/activate/delete), and Admin Panel |
+| **Kepala Instalasi** | Approvals, all reports, dashboard, and User Management (view-only) |
 | **Admin Umum** | Receiving, distribution, basic reports |
 | **Petugas Gudang** | Stock operations, receiving verification |
 | **Auditor** | Financial reports, stock valuation, audit |
+
+### Administrative Access Rules (Latest)
+
+- **Admin Panel** sidebar/menu access is **Admin role only**.
+- **User Management** page access is **Admin + Kepala Instalasi**.
+- User-management write actions (create, edit, activate/deactivate, delete) are **Admin only**.
 
 ## Key Architectural Patterns
 
