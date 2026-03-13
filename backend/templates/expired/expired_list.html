@@ -7,9 +7,14 @@
 <div class="table-container">
     <div class="table-header">
         <h5><i class="bi bi-trash me-2"></i>Daftar Pemusnahan (Expired)</h5>
-        <a href="{% url 'expired:expired_create' %}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Buat Dokumen
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'expired:expired_alerts' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-exclamation-triangle me-1"></i>Stok Mendekati/Kedaluwarsa
+            </a>
+            <a href="{% url 'expired:expired_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Buat Dokumen
+            </a>
+        </div>
     </div>
 
     <div class="px-3 py-2 border-bottom bg-light">

@@ -93,6 +93,11 @@
                         data-label="Kadaluarsa">
                         <i class="bi bi-trash"></i><span>Kadaluarsa</span>
                     </a>
+                    <a href="{% url 'expired:expired_alerts' %}"
+                        class="sidebar-link {% if request.resolver_match.url_name == 'expired_alerts' %}active{% endif %}"
+                        data-label="Monitoring Expiry">
+                        <i class="bi bi-exclamation-triangle"></i><span>Monitoring Expiry</span>
+                    </a>
                 </div>
 
                 <div class="sidebar-section-title">Transaksi Stok</div>
@@ -162,6 +167,10 @@
                             <i class="bi bi-arrow-left me-1"></i>Recall / Retur
                         </a>
                         {% elif request.resolver_match.app_name == 'expired' and request.resolver_match.url_name != 'expired_list' %}
+                        <a href="{% url 'expired:expired_list' %}" class="btn btn-outline-secondary btn-sm" title="Kembali ke Kadaluarsa">
+                            <i class="bi bi-arrow-left me-1"></i>Kadaluarsa
+                        </a>
+                        {% elif request.resolver_match.url_name == 'expired_alerts' %}
                         <a href="{% url 'expired:expired_list' %}" class="btn btn-outline-secondary btn-sm" title="Kembali ke Kadaluarsa">
                             <i class="bi bi-arrow-left me-1"></i>Kadaluarsa
                         </a>

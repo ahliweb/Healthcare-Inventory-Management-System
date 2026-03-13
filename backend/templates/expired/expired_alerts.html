@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Stok Mendekati/Kedaluwarsa - Healthcare IMS{% endblock %}
+{% block page_title %}Stok Mendekati/Kedaluwarsa{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <div class="table-header">
+        <h5><i class="bi bi-exclamation-triangle me-2"></i>Monitoring Stok Expiry</h5>
+        <div class="d-flex gap-2">
+            <button type="button" id="createExpiredFromSelected" class="btn btn-primary btn-sm" disabled>
+                <i class="bi bi-plus-lg me-1"></i>Buat Dokumen dari Pilihan
+            </button>
+            <a href="{% url 'expired:expired_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Daftar Dokumen
+            </a>
+        </div>
+    </div>
+
+    <div class="px-3 py-2 border-bottom bg-light">
+        <form method="get" class="filter-form">
+            <input type="text" name="q" class="form-control" placeholder="Cari kode / nama / kategori / batch..." value="{{ search }}">
+            <select name="location" class="form-select">
+                <option value="">Semua Lokasi</option>
+                {% for loc in locations %}
+                <option value="{{ loc.id }}" {{ loc.selected }}>{{ loc.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="level" class="form-select">
+                <option value="all" {% if selected_level == 'all' %}selected{% endif %}>Semua Level</option>
+                <option value="expired" {% if selected_level == 'expired' %}selected{% endif %}>Sudah Kedaluwarsa</option>
+                <option value="near" {% if selected_level == 'near' %}selected{% endif %}>Mendekati Kedaluwarsa (<= 90 hari)</option>
+            </select>
+            <div class="form-check d-flex align-items-center px-2">
+                <input class="form-check-input me-2" type="checkbox" name="pending" value="1" id="pendingOnly" {% if pending_only %}checked{% endif %}>
+                <label class="form-check-label small" for="pendingOnly">Hanya yang belum diproses</label>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-search"></i></button>
+                {% if search or selected_location or selected_level != 'all' or not pending_only %}
+                <a href="{% url 'expired:expired_alerts' %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table" id="expiredAlertsTable">
+            <thead>
+                <tr>
+                    <th style="width: 40px;"><input type="checkbox" id="selectAllExpiredRows"></th>
+                    <th>Kode</th>
+                    <th>Nama Barang</th>
+                    <th>Kategori</th>
+                    <th>Batch/Lot</th>
+                    <th>Lokasi</th>
+                    <th>Expiry Date</th>
+                    <th>Sisa Hari</th>
+                    <th class="text-end">Tersedia</th>
+                    <th>Status Proses</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in items %}
+                <tr>
+                    <td>
+                        {% if not row.stock.is_processed %}
+                        <input type="checkbox" class="expired-stock-check" value="{{ row.stock.id }}">
+                        {% endif %}
+                    </td>
+                    <td><code>{{ row.stock.item.kode_barang }}</code></td>
+                    <td>{{ row.stock.item.nama_barang }}</td>
+                    <td>{{ row.stock.item.kategori.name|default:"-" }}</td>
+                    <td>{{ row.stock.batch_lot }}</td>
+                    <td>{{ row.stock.location.name }}</td>
+                    <td>
+                        {% if row.expiry_status == 'expired' %}
+                        <span class="text-danger fw-semibold">{{ row.stock.expiry_date|date:"d/m/Y" }}</span>
+                        {% elif row.expiry_status == 'near-critical' %}
+                        <span class="text-warning fw-semibold">{{ row.stock.expiry_date|date:"d/m/Y" }}</span>
+                        {% else %}
+                        <span>{{ row.stock.expiry_date|date:"d/m/Y" }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.days_to_expiry < 0 %}
+                        <span class="badge bg-danger-subtle text-danger">{{ row.days_to_expiry|add:"0" }} hari</span>
+                        {% else %}
+                        <span class="badge bg-warning-subtle text-warning">{{ row.days_to_expiry }} hari</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end fw-semibold">{{ row.available }}</td>
+                    <td>
+                        {% if row.stock.is_processed %}
+                        <span class="badge bg-success-subtle text-success">Sudah diproses</span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary">Belum diproses</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10">
+                        <div class="empty-state">
+                            <i class="bi bi-check2-circle d-block"></i>
+                            <p>Tidak ada stok mendekati/sudah kedaluwarsa untuk filter ini.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if items.has_other_pages %}
+    <nav class="d-flex justify-content-center py-3">
+        <ul class="pagination pagination-sm mb-0">
+            {% if items.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ items.previous_page_number }}{% if search %}&q={{ search }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_level %}&level={{ selected_level }}{% endif %}{% if pending_only %}&pending=1{% endif %}">&laquo;</a>
+            </li>
+            {% endif %}
+            {% for num in items.paginator.page_range %}
+            <li class="page-item {% if items.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}{% if search %}&q={{ search }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_level %}&level={{ selected_level }}{% endif %}{% if pending_only %}&pending=1{% endif %}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if items.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ items.next_page_number }}{% if search %}&q={{ search }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_level %}&level={{ selected_level }}{% endif %}{% if pending_only %}&pending=1{% endif %}">&raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selectAll = document.getElementById('selectAllExpiredRows');
+    const rowChecks = () => Array.from(document.querySelectorAll('.expired-stock-check'));
+    const createBtn = document.getElementById('createExpiredFromSelected');
+
+    function syncButtonState() {
+        const selected = rowChecks().filter(cb => cb.checked).map(cb => cb.value);
+        createBtn.disabled = selected.length === 0;
+        createBtn.dataset.selected = selected.join(',');
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            rowChecks().forEach(cb => cb.checked = selectAll.checked);
+            syncButtonState();
+        });
+    }
+
+    rowChecks().forEach(cb => cb.addEventListener('change', syncButtonState));
+
+    if (createBtn) {
+        createBtn.addEventListener('click', function () {
+            const selected = createBtn.dataset.selected || '';
+            if (!selected) return;
+            window.location.href = `{% url 'expired:expired_create' %}?stocks=${encodeURIComponent(selected)}`;
+        });
+    }
+});
+</script>
+{% endblock %}
