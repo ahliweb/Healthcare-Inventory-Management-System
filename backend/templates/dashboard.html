@@ -64,6 +64,7 @@
                 </div>
                 <div class="stat-value">{{ expiring_soon_count }}</div>
                 <div class="stat-label">Mendekati Kedaluwarsa</div>
+                <a href="{% url 'expired:expired_alerts' %}?level=all&pending=1" class="stretched-link" aria-label="Lihat monitoring expiry"></a>
             </div>
         </div>
     </div>
@@ -246,12 +247,13 @@
         <div class="card content-card">
             <div class="card-header">
                 <span><i class="bi bi-calendar-x me-2"></i>Mendekati ED</span>
+                <a href="{% url 'expired:expired_alerts' %}?level=all&pending=1" class="btn btn-sm btn-outline-secondary">Lihat Semua</a>
             </div>
             <div class="card-body p-0">
                 {% if expiring_soon %}
                 <div class="list-group list-group-flush">
                     {% for stock in expiring_soon %}
-                    <div class="list-group-item px-3 py-2">
+                    <a href="{% url 'expired:expired_alerts' %}?q={{ stock.item.kode_barang }}&location={{ stock.location_id }}&pending=1" class="list-group-item list-group-item-action px-3 py-2">
                         <div class="fw-semibold small">{{ stock.item.nama_barang|truncatechars:30 }}</div>
                         <div class="d-flex justify-content-between text-muted small">
                             <span>Batch: {{ stock.batch_lot|default:"-" }}</span>
@@ -259,7 +261,7 @@
                                 {{ stock.expiry_date|date:"d/m/Y" }}
                             </span>
                         </div>
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
                 {% else %}
