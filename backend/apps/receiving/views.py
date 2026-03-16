@@ -19,6 +19,7 @@ from .forms import (
     PlannedReceivingForm,
     ReceivingOrderItemFormSet,
     ReceivingReceiptItemFormSet,
+    ReceivingPlannedReceiptItemFormSet,
     ReceivingCloseForm,
     ReceivingOrderCloseItemFormSet,
 )
@@ -416,12 +417,29 @@ def receiving_plan_receive(request, pk):
         )
         return redirect("receiving:receiving_plan_detail", pk=pk)
 
+    planned_order_items = list(
+        receiving.order_items.filter(is_cancelled=False).select_related("item")
+    )
+    if not planned_order_items:
+        messages.error(request, "Rencana tidak memiliki item aktif untuk diterima.")
+        return redirect("receiving:receiving_plan_detail", pk=pk)
+
+    initial_rows = []
+    for order_item in planned_order_items:
+        initial_rows.append(
+            {
+                "order_item": order_item.pk,
+                "quantity": 0,
+                "unit_price": order_item.unit_price,
+            }
+        )
+
     if request.method == "POST":
-        formset = ReceivingReceiptItemFormSet(
+        formset = ReceivingPlannedReceiptItemFormSet(
             request.POST,
             prefix="items",
             instance=receiving,
-            form_kwargs={"receiving": receiving},
+            form_kwargs={"receiving": receiving, "lock_order_item": True},
             queryset=ReceivingItem.objects.none(),
         )
         if not formset.is_valid():
@@ -456,8 +474,14 @@ def receiving_plan_receive(request, pk):
 
         try:
             with transaction.atomic():
-                receipt_items = formset.save(commit=False)
-                for item in receipt_items:
+                for form in formset.forms:
+                    cleaned = form.cleaned_data
+                    if not cleaned:
+                        continue
+                    item = form.save(commit=False)
+                    if item.quantity is None or item.quantity <= 0:
+                        continue
+
                     item.receiving = receiving
                     item.received_by = request.user
                     item.received_at = timezone.now()
@@ -503,10 +527,6 @@ def receiving_plan_receive(request, pk):
                         notes=f"Penerimaan dari rencana {receiving.document_number}",
                     )
 
-                for form in formset.deleted_forms:
-                    if form.instance.pk:
-                        form.instance.delete()
-
                 remaining = (
                     receiving.order_items.filter(is_cancelled=False)
                     .exclude(planned_quantity__lte=F("received_quantity"))
@@ -526,11 +546,12 @@ def receiving_plan_receive(request, pk):
         )
         return redirect("receiving:receiving_plan_detail", pk=pk)
     else:
-        formset = ReceivingReceiptItemFormSet(
+        formset = ReceivingPlannedReceiptItemFormSet(
             prefix="items",
             instance=receiving,
-            form_kwargs={"receiving": receiving},
+            form_kwargs={"receiving": receiving, "lock_order_item": True},
             queryset=ReceivingItem.objects.none(),
+            initial=initial_rows,
         )
 
     return render(

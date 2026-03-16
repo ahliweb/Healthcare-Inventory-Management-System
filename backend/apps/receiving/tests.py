@@ -265,3 +265,72 @@ class ReceivingWorkflowCleanupTest(TestCase):
             {"code": "GRANT", "name": "Hibah Khusus"},
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_plan_receive_page_uses_fixed_rows_without_delete_control(self):
+        receiving = Receiving.objects.create(
+            document_number="RCV-2026-99997",
+            receiving_type=Receiving.ReceivingType.PROCUREMENT,
+            receiving_date=date(2026, 3, 16),
+            sumber_dana=self.funding,
+            status=Receiving.Status.APPROVED,
+            is_planned=True,
+            created_by=self.user,
+            approved_by=self.user,
+        )
+        ReceivingOrderItem.objects.create(
+            receiving=receiving,
+            item=self.item,
+            planned_quantity=Decimal("5"),
+            received_quantity=Decimal("0"),
+            unit_price=Decimal("1000"),
+            is_cancelled=False,
+        )
+
+        response = self.client.get(
+            reverse("receiving:receiving_plan_receive", args=[receiving.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Kuantitas Rencana")
+        self.assertContains(response, "Kuantitas Diterima")
+        self.assertNotContains(response, "Hapus")
+
+    def test_plan_receive_accepts_zero_qty_as_no_receipt_for_row(self):
+        receiving = Receiving.objects.create(
+            document_number="RCV-2026-99996",
+            receiving_type=Receiving.ReceivingType.PROCUREMENT,
+            receiving_date=date(2026, 3, 16),
+            sumber_dana=self.funding,
+            status=Receiving.Status.APPROVED,
+            is_planned=True,
+            created_by=self.user,
+            approved_by=self.user,
+        )
+        oi = ReceivingOrderItem.objects.create(
+            receiving=receiving,
+            item=self.item,
+            planned_quantity=Decimal("5"),
+            received_quantity=Decimal("0"),
+            unit_price=Decimal("1000"),
+            is_cancelled=False,
+        )
+
+        response = self.client.post(
+            reverse("receiving:receiving_plan_receive", args=[receiving.pk]),
+            {
+                "items-TOTAL_FORMS": "1",
+                "items-INITIAL_FORMS": "0",
+                "items-MIN_NUM_FORMS": "0",
+                "items-MAX_NUM_FORMS": "1000",
+                "items-0-order_item": str(oi.pk),
+                "items-0-quantity": "0",
+                "items-0-batch_lot": "",
+                "items-0-expiry_date": "",
+                "items-0-unit_price": "1000",
+                "items-0-location": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        receiving.refresh_from_db()
+        self.assertEqual(receiving.status, Receiving.Status.APPROVED)
+        self.assertEqual(ReceivingItem.objects.filter(receiving=receiving).count(), 0)

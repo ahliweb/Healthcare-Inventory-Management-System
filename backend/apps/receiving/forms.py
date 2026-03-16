@@ -163,6 +163,19 @@ ReceivingOrderItemFormSet = inlineformset_factory(
 
 
 class ReceivingReceiptItemForm(forms.ModelForm):
+    order_item_label = forms.CharField(
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(attrs={"class": "form-control form-control-sm"}),
+    )
+    planned_quantity = forms.DecimalField(
+        required=False,
+        disabled=True,
+        decimal_places=2,
+        widget=forms.NumberInput(
+            attrs={"class": "form-control form-control-sm text-end", "readonly": True}
+        ),
+    )
     order_item = forms.ModelChoiceField(
         queryset=ReceivingOrderItem.objects.none(),
         widget=forms.Select(
@@ -203,13 +216,38 @@ class ReceivingReceiptItemForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         receiving = kwargs.pop("receiving", None)
+        lock_order_item = kwargs.pop("lock_order_item", False)
         super().__init__(*args, **kwargs)
+        self.lock_order_item = lock_order_item
         self.fields["location"].required = True
+        selected_order_item = None
         if receiving is not None:
             self.fields["order_item"].queryset = ReceivingOrderItem.objects.filter(
                 receiving=receiving,
                 is_cancelled=False,
             )
+        if self.is_bound:
+            selected_order_item_id = self.data.get(self.add_prefix("order_item"))
+        else:
+            selected_order_item_id = self.initial.get("order_item")
+
+        if selected_order_item_id:
+            selected_order_item = (
+                self.fields["order_item"]
+                .queryset.filter(pk=selected_order_item_id)
+                .first()
+            )
+
+        if selected_order_item:
+            self.fields["order_item_label"].initial = str(selected_order_item.item)
+            self.fields[
+                "planned_quantity"
+            ].initial = selected_order_item.planned_quantity
+
+        if self.lock_order_item:
+            self.fields["order_item"].widget = forms.HiddenInput()
+            self.fields["quantity"].required = False
+            self.fields["quantity"].widget.attrs["min"] = "0"
         self.fields["order_item"].label_from_instance = lambda obj: (
             f"{obj.item} (Sisa: {obj.remaining_quantity})"
         )
@@ -219,12 +257,29 @@ class ReceivingReceiptItemForm(forms.ModelForm):
         order_item = cleaned.get("order_item")
         quantity = cleaned.get("quantity")
         if not order_item or quantity is None:
+            if self.lock_order_item and order_item and quantity in (None, ""):
+                cleaned["quantity"] = 0
+                return cleaned
             return cleaned
         location = cleaned.get("location")
-        if location is None:
-            self.add_error("location", "Lokasi wajib dipilih.")
-        if quantity <= 0:
-            self.add_error("quantity", "Jumlah harus lebih dari 0.")
+        if self.lock_order_item:
+            if quantity < 0:
+                self.add_error("quantity", "Jumlah tidak boleh kurang dari 0.")
+            if quantity == 0:
+                return cleaned
+            if location is None:
+                self.add_error("location", "Lokasi wajib dipilih.")
+            if not cleaned.get("batch_lot"):
+                self.add_error("batch_lot", "Batch/Lot wajib diisi.")
+            if not cleaned.get("expiry_date"):
+                self.add_error("expiry_date", "Tanggal kedaluwarsa wajib diisi.")
+            if cleaned.get("unit_price") is None:
+                self.add_error("unit_price", "Harga satuan wajib diisi.")
+        else:
+            if location is None:
+                self.add_error("location", "Lokasi wajib dipilih.")
+            if quantity <= 0:
+                self.add_error("quantity", "Jumlah harus lebih dari 0.")
         if order_item.is_cancelled:
             self.add_error("order_item", "Item pesanan ini sudah dibatalkan.")
         if order_item.remaining_quantity < quantity:
@@ -246,6 +301,15 @@ ReceivingReceiptItemFormSet = inlineformset_factory(
     form=ReceivingReceiptItemForm,
     extra=3,
     can_delete=True,
+)
+
+
+ReceivingPlannedReceiptItemFormSet = inlineformset_factory(
+    Receiving,
+    ReceivingItem,
+    form=ReceivingReceiptItemForm,
+    extra=0,
+    can_delete=False,
 )
 
 

@@ -27,28 +27,27 @@
                             <thead>
                                 <tr>
                                     <th>Item Pesanan</th>
-                                    <th style="width:120px;">Kuantitas</th>
+                                    <th style="width:140px;">Kuantitas Rencana</th>
+                                    <th style="width:140px;">Kuantitas Diterima</th>
                                     <th style="width:140px;">Batch/Lot</th>
                                     <th style="width:140px;">Tanggal Kedaluwarsa</th>
                                     <th style="width:140px;">Harga Satuan</th>
                                     <th>Lokasi</th>
-                                    <th style="width:50px;">Hapus</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item_form in formset %}
                                 <tr>
-                                    <td>{{ item_form.order_item }}</td>
+                                    <td>
+                                        {{ item_form.order_item_label }}
+                                        {{ item_form.order_item }}
+                                    </td>
+                                    <td>{{ item_form.planned_quantity }}</td>
                                     <td>{{ item_form.quantity }}</td>
                                     <td>{{ item_form.batch_lot }}</td>
                                     <td>{{ item_form.expiry_date }}</td>
                                     <td>{{ item_form.unit_price }}</td>
                                     <td>{{ item_form.location }}</td>
-                                    <td class="text-center">
-                                        {% if item_form.instance.pk %}
-                                            {{ item_form.DELETE }}
-                                        {% endif %}
-                                    </td>
                                     {{ item_form.id }}
                                 </tr>
                                 {% for error in item_form.errors.values %}
