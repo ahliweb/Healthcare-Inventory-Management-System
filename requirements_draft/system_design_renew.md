@@ -75,7 +75,7 @@ The implementation currently prioritizes operational correctness and traceabilit
 ### 4.2 Mutation checkpoints
 
 - Receiving posting creates/updates stock and writes `Transaction(IN)`
-- Distribution prepare reserves stock; distribute finalizes stock-out and `Transaction(OUT)`
+- Distribution prepare currently only updates Distribution status (no `stock.reserved` mutation); distribute performs stock decrement and posts `Transaction(OUT)`
 - Recall verify and Expired verify reduce stock and post `Transaction(OUT)`
 - Transfer complete performs paired source `OUT` and destination `IN`
 
