@@ -1,11 +1,19 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .access import get_user_module_scope, has_module_scope
+from .access import ROLE_DEFAULT_SCOPES, get_user_module_scope, has_module_scope
 from .forms import UserCreateForm, UserUpdateForm
 from .models import ModuleAccess, User
+
+
+def _role_defaults_json():
+    """Serialize ROLE_DEFAULT_SCOPES to JSON for client-side JS."""
+    return json.dumps({role: {mod: scope for mod, scope in modules.items()}
+                       for role, modules in ROLE_DEFAULT_SCOPES.items()})
 
 
 def _can_view_users(user):
@@ -118,6 +126,7 @@ def user_create(request):
         {
             "form": form,
             "title": "Tambah User",
+            "role_defaults_json": _role_defaults_json(),
         },
     )
 
@@ -149,6 +158,7 @@ def user_update(request, pk):
             "title": f"Edit User {target_user.username}",
             "target_user": target_user,
             "effective_scopes": _effective_scope_rows(target_user),
+            "role_defaults_json": _role_defaults_json(),
         },
     )
 

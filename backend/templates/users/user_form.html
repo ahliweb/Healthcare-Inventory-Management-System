@@ -164,9 +164,33 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // ── Tooltips ────────────────────────────────────────────────────
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(function (el) {
         new bootstrap.Tooltip(el);
+    });
+
+    // ── Dynamic UAC pre-selection on Jabatan change ─────────────────
+    var roleDefaults = {{ role_defaults_json|safe }};
+    var roleSelect = document.getElementById('id_role');
+    if (!roleSelect) return;
+
+    roleSelect.addEventListener('change', function () {
+        var selectedRole = this.value;
+        var defaults = roleDefaults[selectedRole];
+        if (!defaults) return;
+
+        for (var moduleName in defaults) {
+            var scopeValue = defaults[moduleName];
+            var radioName = 'module_scope__' + moduleName;
+            // Find the radio button with matching name and value
+            var radio = document.querySelector(
+                'input[type="radio"][name="' + radioName + '"][value="' + scopeValue + '"]'
+            );
+            if (radio) {
+                radio.checked = true;
+            }
+        }
     });
 });
 </script>

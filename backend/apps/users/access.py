@@ -43,7 +43,7 @@ ROLE_DEFAULT_SCOPES: Dict[str, Dict[str, int]] = {
         ModuleAccess.Module.ADMIN_PANEL: ModuleAccess.Scope.NONE,
     },
     User.Role.GUDANG: {
-        ModuleAccess.Module.USERS: ModuleAccess.Scope.NONE,
+        ModuleAccess.Module.USERS: ModuleAccess.Scope.NONE, 
         ModuleAccess.Module.ITEMS: ModuleAccess.Scope.VIEW,
         ModuleAccess.Module.STOCK: ModuleAccess.Scope.OPERATE,
         ModuleAccess.Module.RECEIVING: ModuleAccess.Scope.OPERATE,
@@ -55,7 +55,7 @@ ROLE_DEFAULT_SCOPES: Dict[str, Dict[str, int]] = {
         ModuleAccess.Module.ADMIN_PANEL: ModuleAccess.Scope.NONE,
     },
     User.Role.AUDITOR: {
-        ModuleAccess.Module.USERS: ModuleAccess.Scope.VIEW,
+        ModuleAccess.Module.USERS: ModuleAccess.Scope.NONE,
         ModuleAccess.Module.ITEMS: ModuleAccess.Scope.VIEW,
         ModuleAccess.Module.STOCK: ModuleAccess.Scope.VIEW,
         ModuleAccess.Module.RECEIVING: ModuleAccess.Scope.VIEW,
@@ -63,7 +63,7 @@ ROLE_DEFAULT_SCOPES: Dict[str, Dict[str, int]] = {
         ModuleAccess.Module.RECALL: ModuleAccess.Scope.VIEW,
         ModuleAccess.Module.EXPIRED: ModuleAccess.Scope.VIEW,
         ModuleAccess.Module.STOCK_OPNAME: ModuleAccess.Scope.VIEW,
-        ModuleAccess.Module.REPORTS: ModuleAccess.Scope.MANAGE,
+        ModuleAccess.Module.REPORTS: ModuleAccess.Scope.VIEW,
         ModuleAccess.Module.ADMIN_PANEL: ModuleAccess.Scope.NONE,
     },
 }
