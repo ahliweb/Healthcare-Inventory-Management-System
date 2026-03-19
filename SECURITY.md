@@ -2,20 +2,25 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+This repository uses semantic versioning (`MAJOR.MINOR.PATCH`) with the root `VERSION`
+file as the source of truth.
+
+Security fixes are provided for the active release line only.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you discover a security issue, please create a GitHub issue in this repository.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Include:
+
+- A clear description of the issue
+- Steps to reproduce
+- Potential impact
+- Affected version (from the `VERSION` file)
+
+We will triage reports and respond with updates in the issue thread.
