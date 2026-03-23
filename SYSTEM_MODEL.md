@@ -2,7 +2,7 @@
 
 Canonical reference for current schema, route topology, permission model, and stock mutation behavior.
 
-Last verified: 2026-03-18
+Last verified: 2026-03-23
 Verification sources: `backend/apps/*/models.py`, `backend/config/urls.py`, `backend/apps/*/urls.py`, `backend/apps/core/decorators.py`, `backend/apps/users/access.py`, `backend/config/settings.py`, `backend/apps/receiving/admin.py`
 
 ## 1) Domain Overview
@@ -152,6 +152,7 @@ This section reflects model code in `backend/apps/*/models.py`.
 - `distribution.Distribution` (`distributions`):
   - Type: `LPLPO`, `ALLOCATION`, `SPECIAL_REQUEST`
   - Status: `DRAFT`, `SUBMITTED`, `VERIFIED`, `PREPARED`, `DISTRIBUTED`, `REJECTED`
+  - Workflow includes manual reset action back to `DRAFT` from `SUBMITTED`, `VERIFIED`, `PREPARED`, and `REJECTED` (but not from `DISTRIBUTED`)
   - Fields: `document_number` (auto-generated `DIST-YYYYMM-XXXXX` when blank), `request_date`, `program`, `distributed_date`, `notes`, `ocr_text`
   - FKs: `facility`, `created_by`, `verified_by` (nullable), `approved_by` (nullable)
   - Indexes: `idx_dist_status_date`, `idx_dist_facility_date`
@@ -212,9 +213,9 @@ Operational mutation points (from app behavior and admin import logic):
   - `ReceivingItem`
   - `Stock` update/create
   - `Transaction(IN)`
-- Distribution:
-  - prepare phase reserves stock (`reserved`)
-  - distribute phase decreases `quantity`, releases `reserved`, and posts `Transaction(OUT)`
+- Distribution (current implementation does **not** use `Stock.reserved`):
+  - prepare phase updates document status only (no stock mutation and no `stock.reserved` usage)
+  - distribute phase allocates from and decreases `Stock.quantity` and posts `Transaction(OUT)`; any references in other docs (e.g. `.github/copilot-instructions.md`) to FEFO allocation via `Stock.reserved` are obsolete
 - Recall verify decreases stock and posts `Transaction(OUT, reference_type=RECALL)`
 - Expired verify decreases stock and posts `Transaction(OUT, reference_type=EXPIRED)`
 - Stock transfer complete posts paired `OUT` and `IN` transfer transactions and adjusts source/destination stock

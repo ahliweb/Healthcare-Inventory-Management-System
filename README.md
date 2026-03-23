@@ -45,7 +45,7 @@ Web-based inventory management for medicines and medical equipment at the Dinas 
 
 - Receiving (planned): `DRAFT -> SUBMITTED -> APPROVED -> PARTIAL/RECEIVED -> CLOSED`
 - Receiving (regular/imported): commonly persisted as `VERIFIED` after posting
-- Distribution: `DRAFT -> SUBMITTED -> VERIFIED -> PREPARED -> DISTRIBUTED` (or `REJECTED`)
+- Distribution: `DRAFT -> SUBMITTED -> VERIFIED -> PREPARED -> DISTRIBUTED` (or `REJECTED`, and non-distributed docs can be reset to `DRAFT`)
 - Recall: `DRAFT -> SUBMITTED -> VERIFIED -> COMPLETED`
 - Expired: `DRAFT -> SUBMITTED -> VERIFIED -> DISPOSED`
 - Stock transfer: `DRAFT -> COMPLETED`

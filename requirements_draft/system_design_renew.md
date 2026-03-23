@@ -57,7 +57,7 @@ The implementation currently prioritizes operational correctness and traceabilit
 ### 3.3 Workflow status snapshots
 
 - Receiving planned: `DRAFT -> SUBMITTED -> APPROVED -> PARTIAL/RECEIVED -> CLOSED`
-- Distribution: `DRAFT -> SUBMITTED -> VERIFIED -> PREPARED -> DISTRIBUTED` (or `REJECTED`)
+- Distribution: `DRAFT -> SUBMITTED -> VERIFIED -> PREPARED -> DISTRIBUTED` (non-distributed documents (`SUBMITTED`, `VERIFIED`, `PREPARED`, `REJECTED`) can be reset to `DRAFT`)
 - Recall: `DRAFT -> SUBMITTED -> VERIFIED -> COMPLETED`
 - Expired: `DRAFT -> SUBMITTED -> VERIFIED -> DISPOSED`
 - Stock transfer: `DRAFT -> COMPLETED`

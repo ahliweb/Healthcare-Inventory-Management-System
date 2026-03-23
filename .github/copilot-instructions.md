@@ -59,7 +59,7 @@ All Django apps live under `backend/apps/`. Each app is a self-contained module 
 | `items`        | Item master (Master Barang) + all lookup tables (Unit, Category, Location, FundingSource, Program, Supplier, Facility) |
 | `stock`        | `Stock` (live inventory per batch/location) + `Transaction` (immutable audit trail) |
 | `receiving`    | Incoming stock documents (procurement/grants) with DRAFT → SUBMITTED → VERIFIED workflow |
-| `distribution` | Outgoing stock to facilities with DRAFT → SUBMITTED → VERIFIED → PREPARED → DISTRIBUTED workflow |
+| `distribution` | Outgoing stock to facilities with DRAFT → SUBMITTED → VERIFIED → PREPARED → DISTRIBUTED workflow (non-distributed docs can be reset to DRAFT) |
 | `recall`       | Return/recall documents to supplier with DRAFT → SUBMITTED → VERIFIED → COMPLETED workflow |
 | `expired`      | Expired/disposal documents with DRAFT → SUBMITTED → VERIFIED → DISPOSED workflow |
 | `stock_opname` | Physical inventory counting (stock opname), discrepancy reports |
