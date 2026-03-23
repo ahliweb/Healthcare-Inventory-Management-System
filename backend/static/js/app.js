@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
     initSidebarCollapse();
     initAlertDismiss();
+    initFlashToasts();
     initDeleteConfirmation();
     initRowKeyboardFocus();
     initTypeaheadSelects();
@@ -532,6 +533,38 @@ function initAlertDismiss() {
             const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
             bsAlert.close();
         }, 5000);
+    });
+}
+
+/** Show Django flash messages as Bootstrap toasts */
+function initFlashToasts() {
+    const toasts = document.querySelectorAll('.flash-toast');
+    if (toasts.length === 0) return;
+
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        toasts.forEach((toastEl) => {
+            const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+            toast.show();
+        });
+        return;
+    }
+
+    toasts.forEach((toastEl) => {
+        const delay = Number.parseInt(toastEl.getAttribute('data-bs-delay') || '4500', 10);
+        setTimeout(() => {
+            toastEl.classList.remove('show');
+            toastEl.classList.add('hide');
+            toastEl.addEventListener('transitionend', () => toastEl.remove(), { once: true });
+        }, Number.isFinite(delay) ? delay : 4500);
+
+        const closeBtn = toastEl.querySelector('[data-bs-dismiss="toast"]');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                toastEl.classList.remove('show');
+                toastEl.classList.add('hide');
+                setTimeout(() => toastEl.remove(), 180);
+            });
+        }
     });
 }
 

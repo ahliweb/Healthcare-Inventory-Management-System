@@ -338,6 +338,14 @@ body {
     margin-bottom: 16px;
 }
 
+.toast-container {
+    max-width: min(420px, calc(100vw - 24px));
+}
+
+.flash-toast {
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+}
+
 /* ===== Cards ===== */
 .stat-card {
     background: #fff;
