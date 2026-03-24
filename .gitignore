@@ -36,11 +36,11 @@ Thumbs.db
 desktop.ini
 
 # Project-specific
-requirements_draft/Book1.xlsx
-requirements_draft/obat-progran.txt
+docs/Book1.xlsx
+docs/obat-progran.txt
 .agents/
 security-audit/
-requirements_draft/*.csv
+docs/*.csv
 .error/
 .dev/
 
