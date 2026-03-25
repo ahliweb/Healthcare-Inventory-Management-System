@@ -1,10 +1,73 @@
 {% extends "base.html" %}
+{% load number_format %}
 
 {% block title %}Detail Distribusi {{ distribution.document_number }} — Healthcare IMS{% endblock %}
 {% block page_title %}Detail Distribusi{% endblock %}
 
+{% block extra_css %}
+<style>
+    .sbbk-print-sheet {
+        max-width: 980px;
+        margin: 0 auto;
+        color: #111;
+        font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .sbbk-print-title {
+        text-align: center;
+        font-weight: 700;
+        line-height: 1.35;
+        margin-bottom: 20px;
+        font-size: 18px;
+    }
+
+    .sbbk-print-meta {
+        margin-bottom: 14px;
+        font-size: 15px;
+    }
+
+    .sbbk-print-meta .label {
+        display: inline-block;
+        width: 180px;
+    }
+
+    .sbbk-print-table th,
+    .sbbk-print-table td {
+        border: 1px solid #222 !important;
+        vertical-align: middle;
+    }
+
+    .sbbk-signatures {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+    }
+
+    .sbbk-sign-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .sbbk-sign-space {
+        height: 72px;
+    }
+
+    @media print {
+        .main-content {
+            padding: 0 !important;
+        }
+
+        .sbbk-print-sheet {
+            max-width: none;
+            padding: 8mm 10mm;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row g-3">
+<div class="row g-3 {% if distribution.approved_by %}d-print-none{% endif %}">
     <div class="col-12">
         <div class="card content-card">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -122,6 +185,11 @@
                                     </button>
                                 </form>
                                 {% endif %}
+                                {% if distribution.approved_by %}
+                                <button type="button" class="btn btn-dark btn-sm" onclick="window.print()">
+                                    <i class="bi bi-printer me-1"></i>Cetak SBBK
+                                </button>
+                                {% endif %}
                                 <a href="{% url 'distribution:distribution_list' %}" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-arrow-left me-1"></i>Kembali
                                 </a>
@@ -139,34 +207,31 @@
             <div class="card-header"><span>Daftar Item</span></div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table table-bordered align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>Kode</th>
-                                <th>Nama Barang</th>
-                                <th>Satuan</th>
-                                <th class="text-end">Diminta</th>
-                                <th class="text-end">Disetujui</th>
-                                <th>Batch</th>
-                                <th>Catatan</th>
+                                <th class="text-center" style="width: 70px;">No</th>
+                                <th>Nama Obat/Barang</th>
+                                <th class="text-end" style="width: 160px;">Jumlah Distribusi</th>
+                                <th class="text-end" style="width: 170px;">Harga (Rp)</th>
+                                <th class="text-end" style="width: 190px;">Jumlah (Rp)</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for di in items %}
+                            {% for row in printable_items %}
                             <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td><code>{{ di.item.kode_barang }}</code></td>
-                                <td>{{ di.item.nama_barang }}</td>
-                                <td>{{ di.item.satuan.code }}</td>
-                                <td class="text-end">{{ di.quantity_requested }}</td>
-                                <td class="text-end fw-semibold">{{ di.quantity_approved|default:"-" }}</td>
-                                <td>{{ di.stock.batch_lot|default:"-" }}</td>
-                                <td class="text-muted small">{{ di.notes|default:"-" }}</td>
+                                <td class="text-center">{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="fw-semibold">{{ row.line.item.nama_barang }}</div>
+                                    <small class="text-muted">{{ row.line.item.kode_barang }} • {{ row.line.item.satuan.code }} • Batch {{ row.line.stock.batch_lot|default:"-" }}</small>
+                                </td>
+                                <td class="text-end">{{ row.quantity|id_decimal:2 }}</td>
+                                <td class="text-end">{% if row.unit_price is not None %}{{ row.unit_price|id_decimal:2 }}{% else %}-{% endif %}</td>
+                                <td class="text-end fw-semibold">{% if row.line_total is not None %}{{ row.line_total|id_decimal:2 }}{% else %}-{% endif %}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="8">
+                                <td colspan="5">
                                     <div class="empty-state">
                                         <i class="bi bi-inbox d-block"></i>
                                         <p>Belum ada item distribusi</p>
@@ -181,4 +246,60 @@
         </div>
     </div>
 </div>
+
+<section class="sbbk-print-sheet d-none {% if distribution.approved_by %}d-print-block{% endif %}">
+    <div class="sbbk-print-title">
+        SURAT BUKTI BARANG KELUAR (SBBK)<br>
+        INSTALASI FARMASI KABUPATEN<br>
+        DINAS KESEHATAN KABUPATEN ACEH BARAT
+    </div>
+
+    <div class="sbbk-print-meta">
+        <div><span class="label">Nomor Dokumen</span>: {{ distribution.document_number }}</div>
+        <div><span class="label">Unit Penerima</span>: {{ distribution.facility.name|upper }}</div>
+        <div><span class="label">Bulan</span>: {{ distribution.request_date|date:"F Y"|upper }}</div>
+    </div>
+
+    <table class="table table-bordered sbbk-print-table mb-0">
+        <thead>
+            <tr>
+                <th class="text-center" style="width: 56px;">No</th>
+                <th>Nama Obat/Barang</th>
+                <th class="text-center" style="width: 130px;">Jumlah Distribusi</th>
+                <th class="text-center" style="width: 150px;">Harga (Rp)</th>
+                <th class="text-center" style="width: 170px;">Jumlah (Rp)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in printable_items %}
+            <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>{{ row.line.item.nama_barang }}</td>
+                <td class="text-end">{{ row.quantity|id_decimal:2 }}</td>
+                <td class="text-end">{% if row.unit_price is not None %}{{ row.unit_price|id_decimal:2 }}{% else %}-{% endif %}</td>
+                <td class="text-end">{% if row.line_total is not None %}{{ row.line_total|id_decimal:2 }}{% else %}-{% endif %}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="2" class="text-end fw-semibold">Total</td>
+                <td class="text-end fw-semibold">{{ total_quantity|id_decimal:2 }}</td>
+                <td></td>
+                <td class="text-end fw-semibold">{{ grand_total|id_decimal:2 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="sbbk-signatures">
+        <div class="sbbk-sign-box">
+            Petugas Gudang
+            <div class="sbbk-sign-space"></div>
+            <strong>{{ distribution.approved_by|default:distribution.created_by }}</strong>
+        </div>
+        <div class="sbbk-sign-box">
+            Penerima ({{ distribution.facility.name }})
+            <div class="sbbk-sign-space"></div>
+            <strong>(................................)</strong>
+        </div>
+    </div>
+</section>
 {% endblock %}

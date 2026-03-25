@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -132,12 +134,43 @@ def distribution_detail(request, pk):
     )
     items = dist.items.select_related("item", "item__satuan", "stock")
 
+    printable_items = []
+    total_quantity = Decimal("0")
+    grand_total = Decimal("0")
+    for di in items:
+        quantity = (
+            di.quantity_approved
+            if di.quantity_approved is not None
+            else di.quantity_requested
+        )
+        unit_price = di.stock.unit_price if di.stock else None
+        line_total = None
+        if quantity is not None and unit_price is not None:
+            line_total = quantity * unit_price
+
+        if quantity is not None:
+            total_quantity += quantity
+        if line_total is not None:
+            grand_total += line_total
+
+        printable_items.append(
+            {
+                "line": di,
+                "quantity": quantity,
+                "unit_price": unit_price,
+                "line_total": line_total,
+            }
+        )
+
     return render(
         request,
         "distribution/distribution_detail.html",
         {
             "distribution": dist,
             "items": items,
+            "printable_items": printable_items,
+            "total_quantity": total_quantity,
+            "grand_total": grand_total,
         },
     )
 
