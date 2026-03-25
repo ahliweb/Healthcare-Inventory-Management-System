@@ -111,14 +111,12 @@
 
                             {% if distribution.verified_by %}
                             <dt class="col-5 text-muted">Diverifikasi</dt>
-                            <dd class="col-7">{{ distribution.verified_by }}<br><small class="text-muted">{{
-                                    distribution.verified_at|date:"d/m/Y H:i" }}</small></dd>
+                            <dd class="col-7">{{ distribution.verified_by }}<br><small class="text-muted">{{ distribution.verified_at|date:"d/m/Y H:i" }}</small></dd>
                             {% endif %}
 
                             {% if distribution.approved_by %}
                             <dt class="col-5 text-muted">Didistribusikan</dt>
-                            <dd class="col-7">{{ distribution.approved_by }}<br><small class="text-muted">{{
-                                    distribution.approved_at|date:"d/m/Y H:i" }}</small></dd>
+                            <dd class="col-7">{{ distribution.approved_by }}<br><small class="text-muted">{{ distribution.approved_at|date:"d/m/Y H:i" }}</small></dd>
                             {% endif %}
 
                             {% if distribution.distributed_date %}
