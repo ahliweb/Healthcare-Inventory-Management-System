@@ -94,7 +94,7 @@ def item_list(request):
 
 
 @login_required
-@perm_required('items.add_item')
+@perm_required("items.add_item")
 def item_create(request):
     if request.method == "POST":
         form = ItemForm(request.POST)
@@ -111,7 +111,7 @@ def item_create(request):
 
 
 @login_required
-@perm_required('items.change_item')
+@perm_required("items.change_item")
 def item_update(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if request.method == "POST":
@@ -131,7 +131,7 @@ def item_update(request, pk):
 
 
 @login_required
-@perm_required('items.delete_item')
+@perm_required("items.delete_item")
 def item_delete(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if request.method == "POST":
@@ -143,7 +143,7 @@ def item_delete(request, pk):
 
 
 @login_required
-@perm_required('items.add_unit')
+@perm_required("items.add_unit")
 def unit_create(request):
     if request.method == "POST":
         form = UnitForm(request.POST)
@@ -166,7 +166,7 @@ def unit_create(request):
 
 
 @login_required
-@perm_required('items.add_category')
+@perm_required("items.add_category")
 def category_create(request):
     if request.method == "POST":
         form = CategoryForm(request.POST)
@@ -189,7 +189,7 @@ def category_create(request):
 
 
 @login_required
-@perm_required('items.add_program')
+@perm_required("items.add_program")
 def program_create(request):
     if request.method == "POST":
         form = ProgramForm(request.POST)
@@ -218,35 +218,43 @@ def program_create(request):
 @require_POST
 def quick_create_unit(request):
     """AJAX endpoint to create a new Unit."""
-    code = request.POST.get('code', '').strip().upper()
-    name = request.POST.get('name', '').strip()
-    description = request.POST.get('description', '').strip()
+    code = request.POST.get("code", "").strip().upper()
+    name = request.POST.get("name", "").strip()
+    description = request.POST.get("description", "").strip()
 
     if not code or not name:
-        return JsonResponse({'error': 'Kode dan Nama wajib diisi.'}, status=400)
+        return JsonResponse({"error": "Kode dan Nama wajib diisi."}, status=400)
     if Unit.objects.filter(code=code).exists():
-        return JsonResponse({'error': f'Satuan dengan kode "{code}" sudah ada.'}, status=400)
+        return JsonResponse(
+            {"error": f'Satuan dengan kode "{code}" sudah ada.'}, status=400
+        )
     if Unit.objects.filter(name__iexact=name).exists():
-        return JsonResponse({'error': f'Satuan dengan nama "{name}" sudah ada.'}, status=400)
+        return JsonResponse(
+            {"error": f'Satuan dengan nama "{name}" sudah ada.'}, status=400
+        )
 
     unit = Unit.objects.create(code=code, name=name, description=description)
-    return JsonResponse({'id': unit.pk, 'text': unit.name})
+    return JsonResponse({"id": unit.pk, "text": unit.name})
 
 
 @login_required
 @require_POST
 def quick_create_category(request):
     """AJAX endpoint to create a new Category."""
-    code = request.POST.get('code', '').strip().upper()
-    name = request.POST.get('name', '').strip()
-    sort_order = request.POST.get('sort_order', '0').strip()
+    code = request.POST.get("code", "").strip().upper()
+    name = request.POST.get("name", "").strip()
+    sort_order = request.POST.get("sort_order", "0").strip()
 
     if not code or not name:
-        return JsonResponse({'error': 'Kode dan Nama wajib diisi.'}, status=400)
+        return JsonResponse({"error": "Kode dan Nama wajib diisi."}, status=400)
     if Category.objects.filter(code=code).exists():
-        return JsonResponse({'error': f'Kategori dengan kode "{code}" sudah ada.'}, status=400)
+        return JsonResponse(
+            {"error": f'Kategori dengan kode "{code}" sudah ada.'}, status=400
+        )
     if Category.objects.filter(name__iexact=name).exists():
-        return JsonResponse({'error': f'Kategori dengan nama "{name}" sudah ada.'}, status=400)
+        return JsonResponse(
+            {"error": f'Kategori dengan nama "{name}" sudah ada.'}, status=400
+        )
 
     try:
         sort_order = int(sort_order) if sort_order else 0
@@ -254,23 +262,59 @@ def quick_create_category(request):
         sort_order = 0
 
     cat = Category.objects.create(code=code, name=name, sort_order=sort_order)
-    return JsonResponse({'id': cat.pk, 'text': cat.name})
+    return JsonResponse({"id": cat.pk, "text": cat.name})
 
 
 @login_required
 @require_POST
 def quick_create_program(request):
     """AJAX endpoint to create a new Program."""
-    code = request.POST.get('code', '').strip().upper()
-    name = request.POST.get('name', '').strip()
-    description = request.POST.get('description', '').strip()
+    code = request.POST.get("code", "").strip().upper()
+    name = request.POST.get("name", "").strip()
+    description = request.POST.get("description", "").strip()
 
     if not code or not name:
-        return JsonResponse({'error': 'Kode dan Nama wajib diisi.'}, status=400)
+        return JsonResponse({"error": "Kode dan Nama wajib diisi."}, status=400)
     if Program.objects.filter(code=code).exists():
-        return JsonResponse({'error': f'Program dengan kode "{code}" sudah ada.'}, status=400)
+        return JsonResponse(
+            {"error": f'Program dengan kode "{code}" sudah ada.'}, status=400
+        )
     if Program.objects.filter(name__iexact=name).exists():
-        return JsonResponse({'error': f'Program dengan nama "{name}" sudah ada.'}, status=400)
+        return JsonResponse(
+            {"error": f'Program dengan nama "{name}" sudah ada.'}, status=400
+        )
 
     prog = Program.objects.create(code=code, name=name, description=description)
-    return JsonResponse({'id': prog.pk, 'text': prog.name})
+    return JsonResponse({"id": prog.pk, "text": prog.name})
+
+
+@login_required
+@require_POST
+def quick_create_facility(request):
+    """AJAX endpoint to create a new Facility."""
+    code = request.POST.get("code", "").strip().upper()
+    name = request.POST.get("name", "").strip()
+    address = request.POST.get("address", "").strip()
+    phone = request.POST.get("phone", "").strip()
+    facility_type = (
+        request.POST.get("facility_type", "").strip() or Facility.FacilityType.PUSKESMAS
+    )
+
+    if not code or not name:
+        return JsonResponse({"error": "Kode dan Nama wajib diisi."}, status=400)
+    if Facility.objects.filter(code=code).exists():
+        return JsonResponse(
+            {"error": f'Fasilitas dengan kode "{code}" sudah ada.'}, status=400
+        )
+    valid_types = {choice[0] for choice in Facility.FacilityType.choices}
+    if facility_type not in valid_types:
+        return JsonResponse({"error": "Tipe fasilitas tidak valid."}, status=400)
+
+    facility = Facility.objects.create(
+        code=code,
+        name=name,
+        address=address,
+        phone=phone,
+        facility_type=facility_type,
+    )
+    return JsonResponse({"id": facility.pk, "text": str(facility)})

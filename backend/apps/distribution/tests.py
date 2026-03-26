@@ -448,6 +448,39 @@ class DistributionWorkflowTest(TestCase):
         self.assertContains(response, "Petugas")
         self.assertContains(response, str(self.user))
 
+    def test_quick_create_facility_adds_option_for_distribution_form(self):
+        response = self.client.post(
+            reverse("items:quick_create_facility"),
+            {
+                "code": "PKM-02",
+                "name": "Puskesmas Arongan",
+                "facility_type": "PUSKESMAS",
+                "phone": "0655123456",
+                "address": "Jl. Meulaboh",
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(
+            response.content,
+            {
+                "id": Facility.objects.get(code="PKM-02").pk,
+                "text": "PKM-02 - Puskesmas Arongan",
+            },
+        )
+
+    def test_quick_create_facility_rejects_duplicate_code(self):
+        response = self.client.post(
+            reverse("items:quick_create_facility"),
+            {
+                "code": self.facility.code,
+                "name": "Nama Lain",
+                "facility_type": "PUSKESMAS",
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_edit_blocked_for_verified(self):
         dist = self._create_distribution(status=Distribution.Status.VERIFIED)
         response = self.client.get(

@@ -173,6 +173,14 @@
                                     </div>
                                 </div>
                             </div>
+                            {% elif field.name == 'facility' %}
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+                            <div class="input-group">
+                                {{ field }}
+                                <button type="button" class="btn btn-outline-success btn-sm" title="Tambah Fasilitas" data-bs-toggle="modal" data-bs-target="#modal-facility">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
                             {% else %}
                             <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
                             {{ field }}
@@ -282,10 +290,84 @@
                 </form>
             </div>
 </div>
+
+<div class="modal fade" id="modal-facility" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title"><i class="bi bi-plus-circle me-1"></i>Tambah Fasilitas Baru</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Kode <span class="text-danger">*</span></label>
+                        <input type="text" id="facility-code" class="form-control form-control-sm" placeholder="FASKES-002" maxlength="20">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Nama <span class="text-danger">*</span></label>
+                        <input type="text" id="facility-name" class="form-control form-control-sm" placeholder="Puskesmas Meureubo">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Tipe Fasilitas</label>
+                        <select id="facility-type" class="form-select form-select-sm">
+                            <option value="PUSKESMAS">Puskesmas</option>
+                            <option value="RS">Rumah Sakit</option>
+                            <option value="CLINIC">Klinik</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Telepon</label>
+                        <input type="text" id="facility-phone" class="form-control form-control-sm" placeholder="0655-123456" maxlength="50">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Alamat</label>
+                        <textarea id="facility-address" class="form-control form-control-sm" rows="2" placeholder="Alamat fasilitas"></textarea>
+                    </div>
+                </div>
+                <div id="facility-error" class="text-danger small d-none mt-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-save-facility">
+                    <i class="bi bi-check-lg me-1"></i>Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.content) return meta.content;
+        const input = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        return input ? input.value : '';
+    }
+
+    async function postFormJson(url, body) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body,
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Server mengembalikan respons tidak valid (${response.status}). ${text.slice(0, 120)}`);
+        }
+
+        const data = await response.json();
+        return { ok: response.ok, status: response.status, data };
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const updateStaffSummary = () => {
             document.querySelectorAll('.staff-picker').forEach((picker) => {
@@ -362,6 +444,46 @@
         });
 
         updateStaffSummary();
+
+        const facilitySaveBtn = document.getElementById('btn-save-facility');
+        if (facilitySaveBtn) {
+            facilitySaveBtn.addEventListener('click', async () => {
+                const errorEl = document.getElementById('facility-error');
+                errorEl.classList.add('d-none');
+
+                const code = document.getElementById('facility-code').value.trim().toUpperCase();
+                const name = document.getElementById('facility-name').value.trim();
+                const facilityType = document.getElementById('facility-type').value;
+                const phone = document.getElementById('facility-phone').value.trim();
+                const address = document.getElementById('facility-address').value.trim();
+                const body = 'code=' + encodeURIComponent(code)
+                    + '&name=' + encodeURIComponent(name)
+                    + '&facility_type=' + encodeURIComponent(facilityType)
+                    + '&phone=' + encodeURIComponent(phone)
+                    + '&address=' + encodeURIComponent(address);
+
+                try {
+                    const result = await postFormJson('{% url "items:quick_create_facility" %}', body);
+                    if (!result.ok) {
+                        errorEl.textContent = result.data.error;
+                        errorEl.classList.remove('d-none');
+                        return;
+                    }
+
+                    const select = document.getElementById('id_facility');
+                    const opt = new Option(result.data.text, result.data.id, true, true);
+                    select.add(opt);
+                    ['code', 'name', 'phone', 'address'].forEach((field) => {
+                        document.getElementById('facility-' + field).value = '';
+                    });
+                    document.getElementById('facility-type').value = 'PUSKESMAS';
+                    bootstrap.Modal.getInstance(document.getElementById('modal-facility')).hide();
+                } catch (err) {
+                    errorEl.textContent = err.message || 'Gagal menyimpan fasilitas.';
+                    errorEl.classList.remove('d-none');
+                }
+            });
+        }
     });
 </script>
 {% endblock %}
