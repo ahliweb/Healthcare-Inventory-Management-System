@@ -138,6 +138,7 @@ When code changes affect schema, routes, permissions, settings, or scripts, upda
 - `AGENTS.md`
 - `SYSTEM_MODEL.md`
 - `docs/developer_guide.md` when setup, testing, release, or documentation process guidance changes
+- Relevant files in `docs/`
 - `backend/seed/README.md` (if CSV schema/semantics changed)
 
 ## Context7 Reference Policy
